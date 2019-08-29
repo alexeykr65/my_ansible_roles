@@ -1,0 +1,44 @@
+---
+# tasks file for bgp
+#### Configure BGP 
+# - name: "Delete old BGP configuration on router"
+#   import_tasks: route_map_del.yml
+
+# - name: Show route-maps data
+#   debug: 
+#     msg:
+#       - "{{ lookup('vars', 'route_maps') }}"
+- name: "Show route-maps configuration on router"
+  import_tasks: route_map_del.yml
+  when: rm_del_all
+
+- name: "Delete current Route-Maps configuration on router"
+  ios_config:
+    src: route_map_del_eveng.j2
+    backup: no
+  when: inventory_hostname in lookup('vars', 'route_maps')   
+  tags:
+    - cfg_del 
+
+- name: "Delete old local Route-Maps configuration files"
+  file:
+    path: "./configs/route_map_{{ inventory_hostname }}.txt"
+    state: absent
+
+- name: "Generating new Route-Maps configuration files"
+  template:
+    src: route_map_eveng.j2
+    dest: "./configs/route_map_{{ inventory_hostname }}.txt"
+    trim_blocks: True
+    lstrip_blocks: True
+  when: inventory_hostname in lookup('vars', 'route_maps')
+
+- name: "Configure Route-Maps on router from configuration file "
+  ios_config:
+    src: "./configs/route_map_{{ inventory_hostname }}.txt"
+    backup: no
+  when: inventory_hostname in lookup('vars', 'route_maps')
+
+- name: "Show route-maps configuration on router"
+  import_tasks: route_map_show.yml
+ 

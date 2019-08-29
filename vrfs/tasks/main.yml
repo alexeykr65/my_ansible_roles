@@ -1,0 +1,22 @@
+---
+# tasks file for ospf
+
+- name: "Delete old VRFs configuration "
+  import_tasks: vrf_del.yml
+
+- name: "Generating new VRF configuration files"
+  template:
+    src: vrf_eveng.j2
+    dest: "./configs/vrf_{{ inventory_hostname }}.txt"
+    trim_blocks: True
+    lstrip_blocks: True
+  when: inventory_hostname in vrfs
+
+- name: "Configure VRF on router"
+  ios_config:
+    src: vrf_eveng.j2
+    backup: no
+  when: inventory_hostname in vrfs
+
+- name: "Show current VRF configuration "
+  import_tasks: vrf_show.yml

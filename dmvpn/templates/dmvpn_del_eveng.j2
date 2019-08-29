@@ -1,0 +1,4 @@
+{# Configure ospf for IOS #}
+{% if current_ospf_proc | length > 0 %}
+no router ospf {{ current_ospf_proc[0] }}
+{% endif %}

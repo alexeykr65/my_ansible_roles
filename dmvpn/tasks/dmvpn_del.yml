@@ -1,0 +1,49 @@
+---
+# tasks file for DMVPN
+- name: "Set list of dmvpn hosts and tunnels"
+  set_fact:
+    dmvpn_hosts: "{{ lookup('template', 'dmvpn_hosts.j2')  }}"
+    dmvpn_tuns: "{{ lookup('template', 'dmvpn_tuns.j2')  }}"
+  run_once: true
+  tags:
+    - get_facts
+
+- name: Collect facts
+  ios_facts:
+    gather_subset:
+      - "!hardware"
+  when: inventory_hostname in dmvpn_hosts
+  tags:
+    - get_facts
+
+- name: Set fact current DMVPN 
+  set_fact:
+    current_dmvpn_tuns: "{{ ansible_net_config | regex_findall('\\ninterface Tunnel(.*)') }}"
+  when: inventory_hostname in dmvpn_hosts    
+  tags:
+    - get_facts
+
+- name: Show var current_dmvpn_tuns
+  debug: 
+    msg:
+      - "{{ dmvpn_hosts }}"
+      - "{{dmvpn_tuns}}"
+  when: inventory_hostname in dmvpn_hosts        
+  tags:
+    - get_facts
+
+- name: "Delete old DMVPN tunnels on router"
+  ios_config:
+    lines: "no interface tunnel{{ item }}"
+    backup: no
+  when: (current_dmvpn_tuns is defined) and (current_dmvpn_tuns | length > 0)
+  loop: "{{ current_dmvpn_tuns }}"
+  tags:
+    - get_facts
+
+# - name: "Show list of dmvpn hosts"
+#   debug: 
+#     msg: 
+#       - "{{ dmvpn_hosts }}"
+#       - "{{ dmvpn_tuns }}"      
+#   run_once: true

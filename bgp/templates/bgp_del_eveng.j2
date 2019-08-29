@@ -1,0 +1,4 @@
+{# Configure ospf for IOS #}
+{% if current_bgp | length > 0 %}
+no router bgp {{ current_bgp[0] }}
+{% endif %}

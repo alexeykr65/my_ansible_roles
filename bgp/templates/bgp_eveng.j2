@@ -1,0 +1,19 @@
+{# Configure BGP for IOS #}
+router bgp {{ bgp.bgp_as }}
+ bgp router-id {{ bgp.router_id }}
+ no bgp default ipv4-unicast
+{% for nei in bgp.neighbors %}
+ neighbor {{ nei.neighbor }} remote-as {{ nei.remote_as }}
+{% if 'update_source' in nei %}
+ neighbor {{ nei.neighbor }} update-source {{ nei.update_source }}
+{% endif %} 
+{% endfor %}
+ address-family ipv4 unicast 
+{% for net in bgp.networks %}
+  network {{ net.prefix }} mask {{ [net.prefix, net.masklen] | join('/') | ipaddr('netmask') }}
+{% endfor %}
+{% for nei in bgp.neighbors %}
+  neighbor {{ nei.neighbor }} activate
+{% endfor %}
+{#======================================================#}
+{#======================================================#}

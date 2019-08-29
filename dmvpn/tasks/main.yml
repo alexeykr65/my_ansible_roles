@@ -1,0 +1,32 @@
+---
+# tasks file for DMVPN
+- name: "Get and Delete old DMVPN configuration "
+  import_tasks: dmvpn_del.yml
+
+- name: "Check directory for config files "
+  file:
+    path: "{{cfg_dmvpn_path}}"
+    state: directory
+  changed_when: false
+
+- name: "Delete old local DMVPN configuration files"
+  file:
+    path: "{{cfg_dmvpn_path}}/dmvpn_{{ inventory_hostname }}.txt"
+    state: absent
+
+- name: "Generating new local DMVPN configuration files"
+  template:
+    src: dmvpn_eveng.j2
+    dest: "{{cfg_dmvpn_path}}/dmvpn_{{ inventory_hostname }}.txt"
+    trim_blocks: True
+    lstrip_blocks: True
+  when: inventory_hostname in dmvpn_hosts 
+
+- name: "Configure DMVPN on router from configuration file "
+  ios_config:
+    src: "{{cfg_dmvpn_path}}/dmvpn_{{ inventory_hostname }}.txt"
+    backup: no
+  when: inventory_hostname in dmvpn_hosts 
+
+- name: "Show current DMVPN configuration "
+  import_tasks: dmvpn_show.yml

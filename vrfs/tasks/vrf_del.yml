@@ -1,0 +1,15 @@
+---
+# tasks file for ospf
+- name: Collect Facts
+  ios_facts:
+    gather_subset:
+      - "!hardware"
+
+- name: Set fact VRF processes
+  set_fact:
+    current_vrf: "{{ ansible_net_config | regex_findall('vrf definition (.*)') }}"
+
+- name: "Delete current VRF on router"
+  ios_config:
+    src: vrf_del_eveng.j2
+    backup: no

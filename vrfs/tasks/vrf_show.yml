@@ -1,0 +1,17 @@
+---
+# tasks file for ospf
+- name: Write VRF cfg in variable
+  ios_command:
+    commands:
+      - sh run | s ^vrf definition
+  register: vrf_cfg
+  tags:
+    - cfg_show
+
+- name: Show VRF cfg
+  debug: 
+    msg: "{{ vrf_cfg.stdout_lines[0] }}"
+  when: vrf_cfg.stdout_lines[0] | length > 1
+  tags:
+    - cfg_show
+

@@ -1,0 +1,60 @@
+---
+# tasks file for bgp
+#### Configure BGP 
+- name: Collect facts
+  ios_facts:
+    gather_subset:
+      - "!hardware"
+  tags:
+    - cfg_del_all
+
+- name: "Set fact Route-Map configuration on router"
+  set_fact:
+    current_rm: "{{ ansible_net_config | regex_findall('\\nroute-map (.*)') }}"
+    current_acl: "{{ ansible_net_config | regex_findall('\\naccess-list (.*)') }}"
+    current_ipacl: "{{ ansible_net_config | regex_findall('\\nip access-list (.*)') }}"    
+    current_prf: "{{ ansible_net_config | regex_findall('\\nip prefix-list (.*)') }}"
+  tags:
+    - cfg_del_all    
+
+- name: "Show current Route-Map configuration on router"
+  debug:
+    msg: 
+      - "{{ current_rm }}"
+      - "{{ current_acl }}"
+      - "{{ current_ipacl }}"
+      - "{{ current_prf }}"      
+  tags:
+    - cfg_del_all
+
+- name: "Delete current Route-Map configuration on router"
+  ios_config:
+    commands: "no route-map {{ item }}"
+    backup: no
+  loop: "{{current_rm}}"
+  tags:
+    - cfg_del_all
+
+- name: "Delete current access-list configuration on router"
+  ios_config:
+    commands: "no access-list {{ item }}"
+    backup: no
+  loop: "{{current_acl}}"
+  tags:
+    - cfg_del_all
+
+- name: "Delete current extended access-list configuration on router"
+  ios_config:
+    commands: "no ip access-list {{ item }}"
+    backup: no
+  loop: "{{current_ipacl}}"
+  tags:
+    - cfg_del_all
+
+- name: "Delete current IP prefix-list configuration on router"
+  ios_config:
+    commands: "no ip prefix-list {{ item }}"
+    backup: no
+  loop: "{{current_prf}}"
+  tags:
+    - cfg_del_all

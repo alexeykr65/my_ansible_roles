@@ -1,0 +1,9 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+{# Configure vrf for IOS #}
+{% if inventory_hostname in vrfs %}
+  {#======================================================#}
+  {% for vrf in vrfs[inventory_hostname] %}
+vrf definition {{ vrf.vrf_name }}
+ address-family {{ vrf.vrf_af }}
+  {% endfor %}
+{% endif %}

@@ -1,0 +1,6 @@
+---
+# tasks file for interfaces
+- name: "Reset Interfaces"
+  ios_config:
+    lines: "default interface {{ item['int'] }}"
+  loop: "{{ interfaces[inventory_hostname] }}"

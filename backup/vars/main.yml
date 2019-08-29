@@ -1,0 +1,6 @@
+---
+# vars file for backup
+#- set_fact:
+#  cur_date: "{{ now() }}"
+
+#"{{ lookup('pipe','date +%Y-%m-%d_%H-%M') }}"

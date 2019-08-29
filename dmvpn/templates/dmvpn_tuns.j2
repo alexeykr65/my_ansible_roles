@@ -1,0 +1,6 @@
+{# Configure DMVPN for IOS #}
+[
+{%- for tuns in dmvpn.tunnels -%}
+'{{ tuns.tun_num }}',
+{% endfor %}
+]

@@ -1,0 +1,30 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+
+{% if 'acl' in route_maps[inventory_hostname] %}
+  {% for acl in route_maps[inventory_hostname].acl %}
+ip access-list {{ acl.type }} {{ acl.acl_id }}
+    {% for line in acl.raw %}
+ {{ line }}
+    {% endfor %} 
+  {% endfor %}
+{% endif %}
+
+{% if 'prefix' in route_maps[inventory_hostname] %}
+  {% for prf in route_maps[inventory_hostname].prefix %}
+    {% for line in prf.raw %}
+ip prefix-list {{ prf.prefix_id }} {{ line }}
+    {% endfor %} 
+  {% endfor %}
+{% endif %}
+
+{# Configure Router-Maps for IOS #}
+{% for rm in route_maps[inventory_hostname].rm %}
+  {% for line in rm.raw %}
+route-map  {{ rm.rm_id }} {{ line.raw_num }} 
+  {{ line.raw_if }}
+  {% endfor %} 
+{% endfor %}
+
+
+{#======================================================#}
+{#======================================================#}

@@ -1,0 +1,10 @@
+---
+# tasks file for show
+- name: "Get show commands"
+  ios_command: 
+    commands: ['show ip int br', 'show ip ospf nei']
+  register: show_commands
+- debug:
+    msg: "{{ show_commands.stdout_lines }}"
+  tags:
+    - show_test

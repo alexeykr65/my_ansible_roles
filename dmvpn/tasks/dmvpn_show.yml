@@ -1,0 +1,19 @@
+---
+# tasks file for DMVPN
+- name: Write DMVPN cfg in variable
+  ios_command:
+    commands:
+      - sh run | s ^interface Tunnel
+  register: dmvpn_cfg
+  tags:
+    - cfg_show
+
+- name: Show DMVPN cfg
+  debug: 
+    msg: "{{ dmvpn_cfg.stdout_lines[0] }}"
+  when: dmvpn_cfg.stdout_lines[0] | length > 1
+  tags:
+    - cfg_show
+
+
+

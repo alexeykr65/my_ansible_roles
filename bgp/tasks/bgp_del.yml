@@ -1,0 +1,22 @@
+---
+# tasks file for bgp
+#### Configure BGP 
+- name: Collect facts
+  ios_facts:
+    gather_subset:
+      - "!hardware"
+  tags:
+    - del_bgp
+
+- name: "Set fact BGP configuration on router"
+  set_fact:
+    current_bgp: "{{ ansible_net_config | regex_findall('router bgp (.*)') }}"
+  tags:
+    - del_bgp    
+
+- name: "Delete current BGP configuration on router"
+  ios_config:
+    src: bgp_del_eveng.j2
+    backup: no
+  tags:
+    - del_bgp

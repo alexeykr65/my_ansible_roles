@@ -1,0 +1,33 @@
+---
+# tasks file for ospf
+
+- name: "Delete old OSPF configuration "
+  import_tasks: ospf_del.yml
+
+- name: "Check directory for config files "
+  file:
+    path: "{{cfg_ospf_path}}"
+    state: directory
+  changed_when: false
+
+- name: "Generating new OSPF configuration files"
+  template:
+    src: ospf_eveng.j2
+    dest: "{{cfg_ospf_path}}/ospf_{{ inventory_hostname }}.txt"
+    trim_blocks: True
+    lstrip_blocks: True    
+
+- name: "Configure OSPF on router"
+  ios_config:
+    src: ospf_eveng.j2
+    backup: no
+
+- name: "Show current OSPF configuration "
+  import_tasks: ospf_show.yml
+
+#  and length: {{ospf_cfg.stdout_lines | length }}
+# - name: Set fact ospf_networks
+#   set_fact:
+#     current_ospf_networks: "{{ ansible_net_config | regex_findall('network (.*) area 0') }}"
+# - name: Show var current_ospf_networks
+#   debug: var=current_ospf_networks

@@ -1,0 +1,33 @@
+---
+# tasks file for EIGRP
+- name: "Get and Delete old EIGRP configuration "
+  import_tasks: eigrp_del.yml
+
+- name: "Check directory for config files "
+  file:
+    path: "{{cfg_eigrp_path}}"
+    state: directory
+  changed_when: false
+
+- name: "Delete old local EIGRP cfg files from dir: {{ cfg_eigrp_path }} "
+  file:
+    path: "{{cfg_eigrp_path}}/eigrp_{{ inventory_hostname }}.txt"
+    state: absent
+
+- name: "Generating new local EIGRP cfg files in dir: {{ cfg_eigrp_path }}"
+  template:
+    src: eigrp_eveng.j2
+    dest: "{{cfg_eigrp_path}}/eigrp_{{ inventory_hostname }}.txt"
+    trim_blocks: True
+    lstrip_blocks: True
+  when: inventory_hostname in eigrp 
+
+- name: "Configure EIGRP on router from created cfg file "
+  ios_config:
+    src: "{{cfg_eigrp_path}}/eigrp_{{ inventory_hostname }}.txt"
+    backup: no
+  when: inventory_hostname in eigrp 
+
+- name: "Show current EIGRP configuration "
+  import_tasks: eigrp_show.yml
+

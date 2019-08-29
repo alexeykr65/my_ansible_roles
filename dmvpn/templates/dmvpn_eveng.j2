@@ -1,0 +1,62 @@
+{# Configure DMVPN for IOS #}
+{% for tuns in dmvpn.tunnels %}
+{# ====================Configure HUBs ================================== #}
+  {% if  tuns.hub.hub_name == inventory_hostname %}
+interface tunnel {{ tuns.tun_num }}
+    {% if  'bw' in tuns.hub  %}
+ bandwidth {{ tuns.hub.bw }}
+    {% endif %}
+ ip address {{ tuns.hub.ip_add | ipaddr('address')}} {{ tuns.hub.ip_add | ipaddr('netmask') }}
+   {% if  'mtu' in tuns.hub  %}
+ ip mtu {{ tuns.hub.mtu }}
+    {% endif %}
+ ip nhrp map multicast dynamic
+ ip nhrp network-id {{ tuns.net_id }}
+ ip nhrp redirect
+ ip nhrp holdtime 600
+ ip nhrp registration timeout 200
+ ip nhrp registration no-unique
+    {% if  'mss' in tuns.hub  %}
+ ip tcp adjust-mss {{ tuns.hub.mss }}
+    {% endif %}
+ tunnel source {{ tuns.hub.tun_src }}
+ tunnel mode gre multipoint
+ tunnel key {{ tuns.tun_key }}
+    {% if  'vrf' in tuns.hub  %}
+ tunnel vrf {{ tuns.hub.vrf }}
+    {% endif %} 
+ {% endif %}
+{#====================Configure Spokes ==================================#}
+ {% for spk in tuns.spokes %}
+  {% if spk.sp_name == inventory_hostname %}
+interface tunnel {{ tuns.tun_num }}
+    {% if  'bw' in spk  %}
+ bandwidth {{ spk.bw }}
+    {% endif %}
+ ip address {{ spk.ip_add | ipaddr('address')}} {{ spk.ip_add | ipaddr('netmask') }}
+   {% if  'mtu' in spk  %}
+ ip mtu {{ tuns.spk.mtu }}
+    {% endif %}
+ ip nhrp shortcut
+ ip nhrp holdtime 600
+ ip nhrp registration timeout 200 
+ if-state nhrp
+ ip nhrp map {{ tuns.hub.ip_add | ipaddr('address') }} {{ tuns.hub.ip_src }}
+ ip nhrp map multicast {{ tuns.hub.ip_src }}
+ ip nhrp network-id {{ tuns.net_id }}
+ ip nhrp nhs {{ tuns.hub.ip_add | ipaddr('address') }}
+ ip nhrp registration no-unique
+    {% if  'mss' in spk  %}
+ ip tcp adjust-mss {{ spk.mss }}
+    {% endif %}
+ tunnel source {{ spk.tun_src }}
+ !tunnel destination {{ tuns.hub.ip_src }}
+ tunnel mode gre multipoint
+ tunnel key {{ tuns.tun_key }} 
+    {% if  'vrf' in spk  %}
+ tunnel vrf {{ spk.vrf }}
+    {% endif %} 
+  {% endif %}
+ {% endfor %}
+{#======================================================#}
+{% endfor %}

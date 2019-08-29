@@ -1,0 +1,3 @@
+---
+# defaults file for route-map
+rm_del_all: True

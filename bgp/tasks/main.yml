@@ -1,0 +1,46 @@
+---
+# tasks file for bgp
+#### Configure BGP 
+- name: "Delete old BGP configuration on router"
+  import_tasks: bgp_del.yml
+  when: bgp_del == True
+
+- name: "Delete old local BGP configuration files"
+  file:
+    path: "./configs/bgp_{{ inventory_hostname }}.txt"
+    state: absent
+
+- name: "Load new variables of configuration BGP"  
+  include_vars: 
+    file: "{{ lookup('first_found', possible_files) }}"
+    name: bgp
+  vars:
+    possible_files:
+      - "bgp/{{ inventory_hostname }}.yml"
+      - "bgp/empty.yml"
+
+- name: "Generating new BGP configuration files"
+  template:
+    src: bgp_eveng.j2
+    dest: "./configs/bgp_{{ inventory_hostname }}.txt"
+  when: bgp.bgp_as is defined
+
+- name: "Configure BGP on router from configuration file "
+  ios_config:
+    src: "./configs/bgp_{{ inventory_hostname }}.txt"
+    backup: no
+  when: bgp.bgp_as is defined
+
+- name: "Delete old BGP configuration on router"
+  import_tasks: bgp_show.yml
+  when: bgp_show == True
+
+
+# - name: "Delete old BGP configuration on router"
+#   ios_config:
+#     lines:
+#       - no router bgp {{ bgp.bgp_as }}
+#     backup: no
+#   when: bgp.bgp_as is defined and bgp.operation == 'replace'
+
+

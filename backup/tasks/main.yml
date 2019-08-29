@@ -1,0 +1,12 @@
+---
+# tasks file for backup
+ #### Backup configuration
+
+- name: Backup configuration to dir backup
+  ios_config:
+    backup: yes
+    backup_options:
+      filename: "{{ inventory_hostname }}_{{ cur_date }}.txt"
+      dir_path: "{{ backup_dir }}"
+  tags: 
+    - conf_backup

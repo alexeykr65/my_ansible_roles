@@ -1,0 +1,4 @@
+---
+# vars file for interfaces
+bgp_del: True
+bgp_show: True
