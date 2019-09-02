@@ -1,0 +1,7 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+{# Configure ospf for IOS #}
+{% if current_ospf_proc | length > 0 %}
+  {% for ospf in current_ospf_proc %}
+no router ospf {{ ospf }}
+  {% endfor %}
+{% endif %}

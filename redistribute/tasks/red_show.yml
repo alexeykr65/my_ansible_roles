@@ -1,18 +1,17 @@
 ---
-# tasks file for bgp
-#### Configure BGP 
-- name: Write BGP cfg in variable
+# tasks file for ospf
+- name: Write OSPF cfg in variable
   ios_command:
     commands:
-      - sh run | s ^router bgp
+      - sh run | s ^router ospf
   register: ospf_cfg
   tags:
     - cfg_show
 
-- name: Show BGP cfg
+- name: Show OSPF cfg
   debug: 
     msg: "{{ ospf_cfg.stdout_lines[0] }}"
   when: ospf_cfg.stdout_lines[0] | length > 1
   tags:
     - cfg_show
-
+#  and length: {{ospf_cfg.stdout_lines | length }}

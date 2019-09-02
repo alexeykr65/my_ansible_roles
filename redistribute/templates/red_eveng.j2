@@ -1,0 +1,13 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+{# Configure ospf for IOS #}
+{% if inventory_hostname in redistribute %}
+  {% for prot in redistribute[inventory_hostname] %}
+{#================= Create Process OSPF ============================#}
+router {{ prot.protocol }} {{ prot.protocol_id }}
+    {% if prot.protocol  == 'ospf' %}
+      {% for red in prot.red %}
+ redistribute {{ red.red_protocol }} {{ red.red_id }} subnets
+      {% endfor %}
+    {% endif %}    
+  {% endfor %}
+{% endif %}  

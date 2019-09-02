@@ -18,7 +18,7 @@
     backup: no
   when: inventory_hostname in lookup('vars', 'route_maps')   
   tags:
-    - cfg_del 
+    - rm_del 
 
 - name: "Delete old local Route-Maps configuration files"
   file:

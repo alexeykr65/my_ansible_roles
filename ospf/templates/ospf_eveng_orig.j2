@@ -1,0 +1,25 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+{# Configure ospf for IOS #}
+{% for str_interfaces in interfaces[inventory_hostname] %}
+{#======================================================#}
+{% if 'ospf' in str_interfaces %}
+{% if 'vrf' in str_interfaces %}
+router ospf {{ str_interfaces['ospf'] }} vrf {{ str_interfaces['vrf'] }}
+{% else %}
+router ospf {{ str_interfaces['ospf'] }}
+{% endif %}
+{% if 'rid' in str_interfaces %}
+ router-id {{ str_interfaces['ipv4'] | ipaddr('address') }}
+{% endif %} 
+ network {{ str_interfaces['ipv4'] | ipaddr('address') }} 0.0.0.0 area {{ str_interfaces['ospf_area'] }}
+{% endif %}
+{#======================================================#}
+{% endfor %}
+{#======================================================#}
+{% if inventory_hostname in ospf %}
+{% if 'redistribute' in ospf[inventory_hostname] %}
+{% for red_ospf in ospf[inventory_hostname]['redistribute'] %}
+ redistribute {{red_ospf.protocol}} {{red_ospf.id}} subnets
+{% endfor %}
+{% endif %} 
+{% endif %}

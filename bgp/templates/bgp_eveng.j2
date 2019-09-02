@@ -1,19 +1,65 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
 {# Configure BGP for IOS #}
 router bgp {{ bgp.bgp_as }}
  bgp router-id {{ bgp.router_id }}
  no bgp default ipv4-unicast
-{% for nei in bgp.neighbors %}
+{% if 'bgp_dyn' in bgp %}
+ bgp listen range {{ bgp.bgp_dyn.range }} peer-group  {{ bgp.bgp_dyn.peer_group }}
+{% endif %}
+{#=======================peer_groups===============================#}
+{% if 'peer_groups' in bgp %}
+  {% for pg in bgp.peer_groups %}
+ neighbor {{ pg.pg_name }} peer-group
+ neighbor {{ pg.pg_name }} remote-as {{ pg.remote_as }}
+    {% if 'timers' in pg %}
+ neighbor {{ pg.pg_name }} timers {{ pg.timers }}
+    {% endif %}
+  {% endfor %}
+{% endif %}
+{#=======================neighbors===============================#}
+{% if 'neighbors' in bgp %}
+  {% for nei in bgp.neighbors %}
+    {% if 'neighbor' in nei %}
  neighbor {{ nei.neighbor }} remote-as {{ nei.remote_as }}
-{% if 'update_source' in nei %}
+    {% endif %}
+    {% if 'update_source' in nei %}
  neighbor {{ nei.neighbor }} update-source {{ nei.update_source }}
-{% endif %} 
-{% endfor %}
+    {% endif %}
+    {% if 'peer_group' in nei %}
+ neighbor {{ nei.neighbor }} peer-group {{ nei.peer_group }}
+    {% endif %}
+  {% endfor %}
+{% endif %}
+{#======================= Address Family ===============================#}
  address-family ipv4 unicast 
-{% for net in bgp.networks %}
-  network {{ net.prefix }} mask {{ [net.prefix, net.masklen] | join('/') | ipaddr('netmask') }}
-{% endfor %}
-{% for nei in bgp.neighbors %}
+{% if 'peer_groups' in bgp %}
+  {% for pg in bgp.peer_groups %}
+  neighbor {{ pg.pg_name }} activate
+    {% if 'route_reflector' in pg %}
+  neighbor {{ pg.pg_name }} route-reflector-client
+    {% endif %}
+    {% if 'send_community' in pg %}
+  neighbor {{ pg.pg_name }} send-community
+    {% endif %}
+    {% if 'soft_reconfiguration' in pg %}
+  neighbor {{ pg.pg_name }} soft-reconfiguration {{ pg.soft_reconfiguration }}
+    {% endif %}
+  {% endfor %}
+{% endif %}
+{% if 'neighbors' in bgp %}
+  {% for nei in bgp.neighbors %}
   neighbor {{ nei.neighbor }} activate
-{% endfor %}
-{#======================================================#}
+  {% endfor %}
+{% endif %}
+{% if 'red_internal' in bgp %}
+  bgp redistribute-internal
+{% endif %}
+{% if 'distance' in bgp %}
+  distance bgp {{ bgp.distance }}
+{% endif %}
+{% if 'networks' in bgp %}
+  {% for net in bgp.networks %}
+  network {{ net.prefix }} mask {{ [net.prefix, net.masklen] | join('/') | ipaddr('netmask') }}
+  {% endfor %}
+{% endif %}
 {#======================================================#}

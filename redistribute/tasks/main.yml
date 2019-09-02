@@ -1,0 +1,27 @@
+---
+# tasks file for ospf
+
+# - name: "Delete old OSPF configuration "
+#   import_tasks: ospf_del.yml
+
+- name: "Check directory for config files "
+  file:
+    path: "{{ cfg_red_path }}"
+    state: directory
+  changed_when: false
+
+- name: "Generating new Redistribute configuration files"
+  template:
+    src: red_eveng.j2
+    dest: "{{ cfg_red_path }}/red_{{ inventory_hostname }}.txt"
+    trim_blocks: True
+    lstrip_blocks: True    
+  when: inventory_hostname in redistribute
+
+- name: "Configure Redistribute on router"
+  ios_config:
+    src: red_eveng.j2
+    backup: no
+
+# - name: "Show current Redistribute configuration "
+#   import_tasks: red_show.yml

@@ -1,8 +1,13 @@
 ---
 # tasks file for ospf
 
-- name: "Delete old OSPF configuration "
+- name: "Delete current all OSPF configuration "
+  import_tasks: ospf_del_all.yml
+  when: ospf_del_all
+
+- name: "Delete current OSPF configuration "
   import_tasks: ospf_del.yml
+  when: not ospf_del_all
 
 - name: "Check directory for config files "
   file:
@@ -25,9 +30,3 @@
 - name: "Show current OSPF configuration "
   import_tasks: ospf_show.yml
 
-#  and length: {{ospf_cfg.stdout_lines | length }}
-# - name: Set fact ospf_networks
-#   set_fact:
-#     current_ospf_networks: "{{ ansible_net_config | regex_findall('network (.*) area 0') }}"
-# - name: Show var current_ospf_networks
-#   debug: var=current_ospf_networks

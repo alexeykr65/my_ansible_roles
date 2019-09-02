@@ -1,0 +1,3 @@
+---
+# defaults file for ospf
+cfg_red_path: "./configs/red"
