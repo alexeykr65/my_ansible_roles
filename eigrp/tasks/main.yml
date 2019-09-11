@@ -8,11 +8,15 @@
     path: "{{cfg_eigrp_path}}"
     state: directory
   changed_when: false
+  tags:
+    - gen_cfg
 
 - name: "Delete old local EIGRP cfg files from dir: {{ cfg_eigrp_path }} "
   file:
     path: "{{cfg_eigrp_path}}/eigrp_{{ inventory_hostname }}.txt"
     state: absent
+  tags:
+    - gen_cfg
 
 - name: "Generating new local EIGRP cfg files in dir: {{ cfg_eigrp_path }}"
   template:
@@ -21,6 +25,8 @@
     trim_blocks: True
     lstrip_blocks: True
   when: inventory_hostname in eigrp 
+  tags:
+    - gen_cfg
 
 - name: "Configure EIGRP on router from created cfg file "
   ios_config:

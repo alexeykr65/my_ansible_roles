@@ -1,13 +1,31 @@
 #jinja2: trim_blocks: True, lstrip_blocks: True
 {# Configure ospf for IOS #}
 {% if inventory_hostname in redistribute %}
+{#=============================================#}
   {% for prot in redistribute[inventory_hostname] %}
 {#================= Create Process OSPF ============================#}
 router {{ prot.protocol }} {{ prot.protocol_id }}
     {% if prot.protocol  == 'ospf' %}
       {% for red in prot.red %}
+        {% if 'metric' in red %}
+ redistribute {{ red.red_protocol }} {{ red.red_id }} metric {{ red.metric }} subnets
+        {% else %}
  redistribute {{ red.red_protocol }} {{ red.red_id }} subnets
+        {% endif %}
       {% endfor %}
-    {% endif %}    
+    {% endif %}
+{#================= Create Process EIGRP ============================#}
+    {% if prot.protocol  == 'eigrp' %}
+ address-family ipv4 unicast autonomous-system {{ prot.protocol_af }}
+  topology base
+      {% for red in prot.red %}
+        {% if 'metric' in red %}
+   redistribute {{ red.red_protocol }} {{ red.red_id }} metric {{ red.metric }}
+        {% else %}
+   redistribute {{ red.red_protocol }} {{ red.red_id }}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+{#=============================================#}
   {% endfor %}
 {% endif %}  

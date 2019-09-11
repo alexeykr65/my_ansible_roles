@@ -4,6 +4,9 @@
   {#======================================================#}
   {% for vrf in vrfs[inventory_hostname] %}
 vrf definition {{ vrf.vrf_name }}
+  {% if 'vrf_rd' in vrf %}
+ rd {{ vrf.vrf_rd }}
+  {% endif %}
  address-family {{ vrf.vrf_af }}
   {% endfor %}
 {% endif %}

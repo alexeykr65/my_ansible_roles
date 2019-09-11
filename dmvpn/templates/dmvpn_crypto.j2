@@ -1,0 +1,46 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+{# Configure DMVPN for IOS #}
+crypto ikev2 keyring DMVPN_KEY
+ peer ALL-DMVPN-HOSTS
+  address 0.0.0.0 0.0.0.0
+  pre-shared-key {{ dmvpn.crypto.psk_key}}
+{#====================Configure Proposal ==================================#}
+{% if 'proposal' in dmvpn.crypto %}
+crypto ikev2 proposal IKEV2_PROPOSAL
+ encryption {{ dmvpn.crypto.ike_enc}}
+ prf {{ dmvpn.crypto.ike_prf}}
+ group {{ dmvpn.crypto.ike_group}}
+crypto ikev2 policy IKEV2_POLICY
+ proposal IKEV2_PROPOSAL
+ exit
+{% endif %}
+
+{# ====================Configure transform-set ================================== #}
+crypto ipsec transform-set DMVPN_TRANSFORM {{ dmvpn.crypto.transorm_set }}
+ mode transport
+
+{# ====================Configure IKEv2 Profile ========================= #}
+crypto ikev2 profile {{ dmvpn.crypto.name_ike_profile }}
+ description IKE Profile
+ match fvrf any
+ match identity remote address 0.0.0.0
+ authentication local pre-share
+ authentication remote pre-share
+ keyring local DMVPN_KEY
+{% if  inventory_hostname in dmvpn_spks %}
+ dpd {{dmvpn.crypto.ipsec_spoke_dpd}}
+{% endif %}
+ exit
+{#====================Configure IPSEC Profile ===========================#}       
+crypto ipsec profile {{ dmvpn.crypto.name_ipsec_profile }}
+ set transform-set DMVPN_TRANSFORM
+ set ikev2-profile {{ dmvpn.crypto.name_ike_profile }}
+ exit
+{#====================Configure IPSEC Profile ===========================#}      
+crypto ipsec security-association replay window-size 1024
+
+{% for tuns in dmvpn.tunnels %}
+interface tunnel {{ tuns.tun_num }}
+ tunnel protection ipsec profile {{ dmvpn.crypto.name_ipsec_profile }}
+ exit
+{% endfor %}

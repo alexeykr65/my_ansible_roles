@@ -1,12 +1,18 @@
 ---
 # tasks file for backup
  #### Backup configuration
+- name: Set Variables
+  set_fact:
+    cur_date: "{{ lookup('pipe','date +%Y-%m-%d_%H-%M') }}"
+  run_once: true
+  tags: 
+    - conf_backup
 
 - name: Backup configuration to dir backup
   ios_config:
     backup: yes
     backup_options:
       filename: "{{ inventory_hostname }}_{{ cur_date }}.txt"
-      dir_path: "{{ backup_dir }}"
+      dir_path: "backup/{{ cur_date }}"
   tags: 
     - conf_backup

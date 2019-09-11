@@ -1,5 +1,18 @@
 ---
 # tasks file for DMVPN
+- name: "Set list of dmvpn hosts and tunnels"
+  set_fact:
+    dmvpn_hosts: "{{ lookup('template', 'dmvpn_hosts.j2')  }}"
+    dmvpn_tuns: "{{ lookup('template', 'dmvpn_tuns.j2')  }}"
+    dmvpn_spks: "{{ lookup('template', 'dmvpn_spks.j2')  }}"
+  run_once: true
+  tags:
+    - gen_cfg
+    - cfg_crypto
+    - get_facts
+    - cfg_del_crypto
+    - cfg_del
+
 - name: "Get and Delete old DMVPN configuration "
   import_tasks: dmvpn_del.yml
 
@@ -8,11 +21,15 @@
     path: "{{cfg_dmvpn_path}}"
     state: directory
   changed_when: false
+  tags:
+    - gen_cfg
 
 - name: "Delete old local DMVPN configuration files"
   file:
     path: "{{cfg_dmvpn_path}}/dmvpn_{{ inventory_hostname }}.txt"
     state: absent
+  tags:
+    - gen_cfg
 
 - name: "Generating new local DMVPN configuration files"
   template:
@@ -21,12 +38,19 @@
     trim_blocks: True
     lstrip_blocks: True
   when: inventory_hostname in dmvpn_hosts 
+  tags:
+    - gen_cfg
 
 - name: "Configure DMVPN on router from configuration file "
   ios_config:
     src: "{{cfg_dmvpn_path}}/dmvpn_{{ inventory_hostname }}.txt"
     backup: no
   when: inventory_hostname in dmvpn_hosts 
+
+- name: "Configure Crypto DMVPN configuration "
+  import_tasks: dmvpn_crypto.yml
+  tags:
+   - cfg_crypto
 
 - name: "Show current DMVPN configuration "
   import_tasks: dmvpn_show.yml

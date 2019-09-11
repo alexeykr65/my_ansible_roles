@@ -19,7 +19,7 @@ router bgp {{ bgp.bgp_as }}
 {#=======================neighbors===============================#}
 {% if 'neighbors' in bgp %}
   {% for nei in bgp.neighbors %}
-    {% if 'neighbor' in nei %}
+    {% if 'remote_as' in nei %}
  neighbor {{ nei.neighbor }} remote-as {{ nei.remote_as }}
     {% endif %}
     {% if 'update_source' in nei %}
@@ -38,6 +38,9 @@ router bgp {{ bgp.bgp_as }}
     {% if 'route_reflector' in pg %}
   neighbor {{ pg.pg_name }} route-reflector-client
     {% endif %}
+    {% if 'next_hop_self' in pg %}
+  neighbor {{ pg.pg_name }} next-hop-self {{ pg.next_hop_self }}
+    {% endif %}    
     {% if 'send_community' in pg %}
   neighbor {{ pg.pg_name }} send-community
     {% endif %}
@@ -49,6 +52,9 @@ router bgp {{ bgp.bgp_as }}
 {% if 'neighbors' in bgp %}
   {% for nei in bgp.neighbors %}
   neighbor {{ nei.neighbor }} activate
+    {% if 'next_hop_self' in nei %}
+  neighbor {{ nei.neighbor }} next-hop-self
+    {% endif %}
   {% endfor %}
 {% endif %}
 {% if 'red_internal' in bgp %}
@@ -62,4 +68,30 @@ router bgp {{ bgp.bgp_as }}
   network {{ net.prefix }} mask {{ [net.prefix, net.masklen] | join('/') | ipaddr('netmask') }}
   {% endfor %}
 {% endif %}
-{#======================================================#}
+exit
+{#================= Address Family with VRF =====================================#}
+{% if 'address_family' in bgp %}
+  {% for add_family in bgp.address_family %}
+ address-family {{ add_family.afi }} {{ add_family.safi }} vrf {{ add_family.vrf }}
+{#=======================neighbors===============================#}
+    {% if 'neighbors' in add_family %}
+      {% for nei in add_family.neighbors %}
+        {% if 'neighbor' in nei %}
+  neighbor {{ nei.neighbor }} remote-as {{ nei.remote_as }}
+        {% endif %}
+        {% if 'update_source' in nei %}
+  neighbor {{ nei.neighbor }} update-source {{ nei.update_source }}
+        {% endif %}
+        {% if 'peer_group' in nei %}
+  neighbor {{ nei.neighbor }} peer-group {{ nei.peer_group }}
+        {% endif %}
+  neighbor {{ nei.neighbor }} activate
+      {% endfor %}
+    {% endif %}
+    {% if 'networks' in add_family %}
+      {% for net in add_family.networks %}
+  network {{ net.prefix }} mask {{ [net.prefix, net.masklen] | join('/') | ipaddr('netmask') }}
+      {% endfor %}
+    {% endif %}
+  {% endfor %}
+{% endif %}

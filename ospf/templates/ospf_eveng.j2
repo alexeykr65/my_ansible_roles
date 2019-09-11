@@ -11,6 +11,9 @@ router ospf {{ ospf.ospf_num }}
     {% if 'router_id' in ospf %}
  router-id {{ ospf.router_id }}
     {% endif %}
+    {% if 'summary_address' in ospf %}
+ summary-address {{ ospf.summary_address | ipaddr('network') }} {{ ospf.summary_address | ipaddr('netmask') }}
+    {% endif %}
     {% if 'passive_int' in ospf %}
       {% for pint in ospf.passive_int %}
  passive-interface {{ pint }}

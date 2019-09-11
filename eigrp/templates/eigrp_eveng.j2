@@ -4,27 +4,46 @@
 {# ====================Configure EIGRP ================================== #}
   {% for eigrp in eigrp[inventory_hostname] %}
 router eigrp {{eigrp.eigrp_name}}
-{# ====================Address Family ================================== #}
+{# ==================== Address Family ================================== #}
  address-family ipv4 unicast autonomous-system {{ eigrp.address_family }}
     {% if  'router_id' in eigrp %}
-    eigrp router-id {{ eigrp.router_id }}
+  eigrp router-id {{ eigrp.router_id }}
     {% endif %}
-{# ==================== Networks ================================== #}          
+{# ==================== Networks ================================== #}
     {% for net in eigrp.networks %}
-  network {{ net['net'] | ipaddr('network') }} {{ net['net'] | ipaddr('hostmask') }} 
+  network {{ net['net'] | ipaddr('network') }} {{ net['net'] | ipaddr('hostmask') }}
     {% endfor %}
-{# ==================== Stub Site Num ================================== #}              
+{# ==================== Stub Site Num ================================== #}
     {% if  'stub_site' in eigrp %}
-    eigrp stub-site {{ eigrp.stub_site }}
+  eigrp stub-site {{ eigrp.stub_site }}
     {% endif %}
-{# ==================== AF Interfaces ================================== #}          
+{# ==================== Distribute List ================================== #}
+    {% if  'distribute' in eigrp %}
+  topology base
+   {% for net in eigrp.distribute %}
+   distribute-list route-map {{ net.dis_name }} {{ net.direction }}
+   {% endfor %}
+   exit
+    {% endif %}
+{# ==================== AF Interfaces ================================== #}
     {% if  'af_int' in eigrp %}
       {% for af_int in eigrp.af_int %}
-  af-interface {{ af_int.int_name }} 
-   hello-interval {{ hello_interval }}
-   hold-time {{ hold_time }}
+  af-interface {{ af_int.int_name }}
+        {% if  'hello_interval' in af_int %}
+   hello-interval {{ af_int.hello_interval }}
+        {% endif %}
+        {% if  'hold_time' in af_int %}
+   hold-time {{ af_int.hold_time }}
+        {% endif %}
         {% if  'split_horizon' in af_int %}
-   no split-horizon      
+   no split-horizon
+        {% endif %}
+        {% if  'passive_int' in af_int %}
+          {% if  af_int.passive_int %}
+   passive-interface
+          {% else %}
+   no passive-interface
+          {% endif %}
         {% endif %}
   {# ==================== Stub WAN (AF Interfaces) ================================== #}
         {% if  'stub_int' in af_int %}
@@ -33,18 +52,18 @@ router eigrp {{eigrp.eigrp_name}}
   {# ==================== Summary address ================================== #}
         {% if  'summary_address' in af_int %}
           {% for summ in af_int.summary_address %}
-            summary-address {{ summ | ipaddr('network') }} {{ summ | ipaddr('netmask') }} 
-          {% endfor %}    
-        {% endif %}        
-{# ==================== Exit AF Interfaces ================================== #}        
+   summary-address {{ summ | ipaddr('network') }} {{ summ | ipaddr('netmask') }}
+          {% endfor %}
+        {% endif %}
+{# ==================== Exit AF Interfaces ================================== #}
    exit
-      {% endfor %}    
+      {% endfor %}
     {% endif %}
 {# ==================== Configure Delay on Interfaces ======================== #}
     {% if  'delay' in eigrp %}
       {% for delay in eigrp.delay %}
-interface {{ delay.int_name }} 
- delay {{ delay.delay_num }} 
+interface {{ delay.int_name }}
+ delay {{ delay.delay_num }}
       {% endfor %}
     {% endif %}
   {% endfor %}

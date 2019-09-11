@@ -1,0 +1,19 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+{% for val in current_crypto_profile %}
+no crypto ipsec profile {{val}}
+{% endfor %}
+{% for val in current_crypto_transoform_set %}
+no crypto ipsec transform-set {{val}}
+{% endfor %}
+{% for val in current_crypto_ike_profile %}
+no crypto ikev2 profile {{val}}
+{% endfor %}
+{% for val in current_crypto_keyring %}
+no crypto ikev2 keyring {{val}}
+{% endfor %}
+{% for val in current_crypto_ike_policy %}
+no crypto ikev2 policy {{val}}
+{% endfor %}
+{% for val in current_crypto_ike_proposal %}
+no crypto ikev2 proposal {{val}}
+{% endfor %}
