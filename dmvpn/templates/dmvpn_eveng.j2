@@ -2,60 +2,63 @@
 {# Configure DMVPN for IOS #}
 {% for tuns in dmvpn.tunnels %}
 {# ====================Configure HUBs ================================== #}
-  {% if  tuns.hub.hub_name == inventory_hostname %}
+  {% if  inventory_hostname in tuns.hubs %}
 interface tunnel {{ tuns.tun_num }}
-    {% if  'bw' in tuns.hub  %}
- bandwidth {{ tuns.hub.bw }}
+    {% if  'bw' in tuns.hubs[inventory_hostname] %}
+ bandwidth {{ tuns.hubs[inventory_hostname].bw }}
     {% endif %}
- ip address {{ tuns.hub.ip_add | ipaddr('address')}} {{ tuns.hub.ip_add | ipaddr('netmask') }}
-   {% if  'mtu' in tuns.hub  %}
- ip mtu {{ tuns.hub.mtu }}
+ ip address {{ tuns.hubs[inventory_hostname].ip_add | ipaddr('address')}} {{ tuns.hubs[inventory_hostname].ip_add | ipaddr('netmask') }}
+ ip mtu 1400
+    {% if  'mtu' in tuns.hubs[inventory_hostname] %}
+ ip mtu {{ tuns.hubs[inventory_hostname].mtu }}
     {% endif %}
  ip nhrp map multicast dynamic
  ip nhrp network-id {{ tuns.net_id }}
  ip nhrp redirect
  ip nhrp holdtime 300
  ip nhrp registration no-unique
-    {% if  'mss' in tuns.hub  %}
- ip tcp adjust-mss {{ tuns.hub.mss }}
+ ip tcp adjust-mss 1360
+    {% if  'mss' in tuns.hubs[inventory_hostname]  %}
+ ip tcp adjust-mss {{ tuns.hubs[inventory_hostname].mss }}
     {% endif %}
- tunnel source {{ tuns.hub.tun_src }}
+ tunnel source {{ tuns.hubs[inventory_hostname].tun_src }}
  tunnel mode gre multipoint
  tunnel key {{ tuns.net_id }}
-    {% if  'vrf' in tuns.hub  %}
- tunnel vrf {{ tuns.hub.vrf }}
+    {% if  'vrf' in tuns.hubs[inventory_hostname]  %}
+ tunnel vrf {{ tuns.hubs[inventory_hostname].vrf }}
     {% endif %} 
  {% endif %}
 {#====================Configure Spokes ==================================#}
- {% for spk in tuns.spokes %}
-  {% if spk.sp_name == inventory_hostname %}
+ {% if inventory_hostname in tuns.spokes %}
 interface tunnel {{ tuns.tun_num }}
-    {% if  'bw' in spk  %}
- bandwidth {{ spk.bw }}
+    {% if  'bw' in tuns.spokes[inventory_hostname]  %}
+ bandwidth {{ tuns.spokes[inventory_hostname].bw }}
     {% endif %}
- ip address {{ spk.ip_add | ipaddr('address')}} {{ spk.ip_add | ipaddr('netmask') }}
-   {% if  'mtu' in spk  %}
- ip mtu {{ tuns.spk.mtu }}
+ ip address {{ tuns.spokes[inventory_hostname].ip_add | ipaddr('address')}} {{ tuns.spokes[inventory_hostname].ip_add | ipaddr('netmask') }} 
+ ip mtu 1400
+   {% if  'mtu' in tuns.spokes[inventory_hostname]  %}
+ ip mtu {{ tuns.spokes[inventory_hostname].mtu }}
     {% endif %}
  ip nhrp shortcut
  ip nhrp holdtime 300
- if-state nhrp
- ip nhrp map {{ tuns.hub.ip_add | ipaddr('address') }} {{ tuns.hub.ip_src }}
- ip nhrp map multicast {{ tuns.hub.ip_src }}
+ {% for nhs_hubs in tuns.hubs %}
+ ip nhrp nhs {{ tuns.hubs[nhs_hubs].ip_add | ipaddr('address') }} nbma {{ tuns.hubs[nhs_hubs].ip_src }} multicast priority {{ tuns.hubs[nhs_hubs].pri }} cluster {{ tuns.hubs[nhs_hubs].cluster }}
+ {% endfor %}
+ ip nhrp nhs cluster 1 max-connections 1
+ ip nhrp nhs fallback 20
  ip nhrp network-id {{ tuns.net_id }}
- ip nhrp nhs {{ tuns.hub.ip_add | ipaddr('address') }}
  ip nhrp registration no-unique
-    {% if  'mss' in spk  %}
- ip tcp adjust-mss {{ spk.mss }}
+ if-state nhrp
+ ip tcp adjust-mss 1360 
+    {% if  'mss' in tuns.spokes[inventory_hostname]  %}
+ ip tcp adjust-mss {{ tuns.spokes[inventory_hostname].mss }}
     {% endif %}
- tunnel source {{ spk.tun_src }}
- !tunnel destination {{ tuns.hub.ip_src }}
+ tunnel source {{ tuns.spokes[inventory_hostname].tun_src }}
  tunnel mode gre multipoint
  tunnel key {{ tuns.net_id }} 
-    {% if  'vrf' in spk  %}
- tunnel vrf {{ spk.vrf }}
+    {% if  'vrf' in tuns.spokes[inventory_hostname]  %}
+ tunnel vrf {{ tuns.spokes[inventory_hostname].vrf }}
     {% endif %} 
   {% endif %}
- {% endfor %}
 {#======================================================#}
-{% endfor %}
+ {% endfor %}

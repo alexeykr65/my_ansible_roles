@@ -41,10 +41,6 @@ crypto ipsec security-association replay window-size 1024
 
 {% for tuns in dmvpn.tunnels %}
 interface tunnel {{ tuns.tun_num }}
- {% if  inventory_hostname in dmvpn_spks %}
  tunnel protection ipsec profile {{ dmvpn.crypto.name_ipsec_profile }}
- {% else %}
-  tunnel protection ipsec profile {{ dmvpn.crypto.name_ipsec_profile }} shared
- {% endif %}
  exit
 {% endfor %}

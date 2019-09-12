@@ -1,9 +1,15 @@
 ---
 # tasks file for DMVPN
+# - name: "View variables DMVPN"
+#   debug: 
+#     msg: "{{ dmvpn }}"
+#   run_once: true
+#   tags:
+#     - dmvpn_show
 - name: "Set list of dmvpn hosts and tunnels"
   set_fact:
     dmvpn_hosts: "{{ lookup('template', 'dmvpn_hosts.j2')  }}"
-    dmvpn_tuns: "{{ lookup('template', 'dmvpn_tuns.j2')  }}"
+#    dmvpn_tuns: "{{ lookup('template', 'dmvpn_tuns.j2')  }}"
     dmvpn_spks: "{{ lookup('template', 'dmvpn_spks.j2')  }}"
   run_once: true
   tags:
@@ -37,7 +43,7 @@
     dest: "{{cfg_dmvpn_path}}/dmvpn_{{ inventory_hostname }}.txt"
     trim_blocks: True
     lstrip_blocks: True
-  when: inventory_hostname in dmvpn_hosts 
+  when: inventory_hostname in dmvpn_hosts     
   tags:
     - gen_cfg
 
@@ -45,7 +51,7 @@
   ios_config:
     src: "{{cfg_dmvpn_path}}/dmvpn_{{ inventory_hostname }}.txt"
     backup: no
-  when: inventory_hostname in dmvpn_hosts 
+  when: inventory_hostname in dmvpn_hosts     
 
 - name: "Configure Crypto DMVPN configuration "
   import_tasks: dmvpn_crypto.yml

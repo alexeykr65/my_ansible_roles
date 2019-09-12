@@ -2,9 +2,11 @@
 {# Configure DMVPN for IOS #}
 [
 {%- for tuns in dmvpn.tunnels -%}
-'{{ tuns.hub.hub_name }}',
+{%- for hb in tuns.hubs -%}
+ '{{ hb }}',
+{% endfor %}
 {%- for spk in tuns.spokes -%}
- '{{ spk.sp_name }}',
+ '{{ spk }}',
 {% endfor %}
 {% endfor %}
 ]

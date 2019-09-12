@@ -7,7 +7,7 @@
   tags:
     - gen_cfg
 
-- name: Set fact current DMVPN 
+- name: Set fact current DMVPN CRYPTO
   set_fact:
     current_crypto_profile: "{{ ansible_net_config | regex_findall('\\ncrypto ipsec profile(.*)') }}"
     current_crypto_transoform_set: "{{ ansible_net_config | regex_findall('\\ncrypto ipsec transform-set(.*)') }}"
@@ -20,19 +20,19 @@
     - cfg_del_crypto
     - cfg_del
 
-- name: Show var current_dmvpn_tuns
-  debug: 
-    msg:
-      - "{{ current_crypto_profile }}"
-      - "{{ current_crypto_transoform_set }}"
-      - "{{ current_crypto_ike_profile }}"
-      - "{{ current_crypto_keyring }}"
-      - "{{ current_crypto_ike_policy }}"
-      - "{{ current_crypto_ike_proposal }}"
-  when: inventory_hostname in dmvpn_hosts        
-  tags:
-    - cfg_del_crypto
-    - cfg_del
+# - name: Show var current_dmvpn_tuns
+#   debug: 
+#     msg:
+#       - "{{ current_crypto_profile }}"
+#       - "{{ current_crypto_transoform_set }}"
+#       - "{{ current_crypto_ike_profile }}"
+#       - "{{ current_crypto_keyring }}"
+#       - "{{ current_crypto_ike_policy }}"
+#       - "{{ current_crypto_ike_proposal }}"
+#   when: inventory_hostname in dmvpn_hosts        
+#   tags:
+#     - cfg_del_crypto
+#     - cfg_del
 
 - name: "Delete DMVPN CRYPTO on router from configuration file "
   ios_config:

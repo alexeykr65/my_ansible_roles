@@ -3,7 +3,7 @@
 [
 {%- for tuns in dmvpn.tunnels -%}
 {%- for spk in tuns.spokes -%}
- '{{ spk.sp_name }}',
+ '{{ spk }}',
 {% endfor %}
 {% endfor %}
 ]
