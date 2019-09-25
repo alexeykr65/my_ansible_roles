@@ -4,9 +4,15 @@
   {#======================================================#}
   {% for vrf in vrfs[inventory_hostname] %}
 vrf definition {{ vrf.vrf_name }}
-  {% if 'vrf_rd' in vrf %}
+    {% if 'vrf_rd' in vrf %}
  rd {{ vrf.vrf_rd }}
-  {% endif %}
+    {% endif %}
  address-family {{ vrf.vrf_af }}
+    {% if 'vrf_rt_imp' in vrf %}
+ route-target import {{ vrf.vrf_rt_imp }}
+    {% endif %}
+    {% if 'vrf_rt_exp' in vrf %}
+ route-target export {{ vrf.vrf_rt_exp }}
+    {% endif %}
   {% endfor %}
 {% endif %}

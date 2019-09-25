@@ -4,12 +4,18 @@
   ios_facts:
     gather_subset:
       - "!hardware"
+  tags:
+    - cfg_del
 
 - name: Set fact VRF processes
   set_fact:
     current_vrf: "{{ ansible_net_config | regex_findall('vrf definition (.*)') }}"
+  tags:
+    - cfg_del
 
 - name: "Delete current VRF on router"
   ios_config:
     src: vrf_del_eveng.j2
     backup: no
+  tags:
+    - cfg_del
