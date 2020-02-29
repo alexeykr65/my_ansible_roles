@@ -1,0 +1,8 @@
+- name: Add User with password 
+  ios_user:
+    name: "{{ item.name }}"
+    privilege: "{{ item.priv }}"
+    configured_password: "{{ item.pass }}"
+    update_password: always
+    state: present
+  loop: "{{ ADD_USERS }}"

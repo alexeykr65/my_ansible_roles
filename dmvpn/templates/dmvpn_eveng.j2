@@ -3,7 +3,8 @@
 {% for tuns in dmvpn.tunnels %}
 {# ====================Configure HUBs ================================== #}
   {% if  inventory_hostname in tuns.hubs %}
-interface tunnel {{ tuns.tun_num }}
+interface Tunnel{{ tuns.tun_num }}
+ no ip redirects
     {% if  'bw' in tuns.hubs[inventory_hostname] %}
  bandwidth {{ tuns.hubs[inventory_hostname].bw }}
     {% endif %}
@@ -12,6 +13,9 @@ interface tunnel {{ tuns.tun_num }}
     {% if  'mtu' in tuns.hubs[inventory_hostname] %}
  ip mtu {{ tuns.hubs[inventory_hostname].mtu }}
     {% endif %}
+    {% if  'eigrp_delay' in tuns  %}
+ delay {{ tuns.eigrp_delay }}
+    {% endif %}    
  ip nhrp map multicast dynamic
  ip nhrp network-id {{ tuns.net_id }}
  ip nhrp redirect
@@ -27,10 +31,12 @@ interface tunnel {{ tuns.tun_num }}
     {% if  'vrf' in tuns.hubs[inventory_hostname]  %}
  tunnel vrf {{ tuns.hubs[inventory_hostname].vrf }}
     {% endif %} 
+ tunnel protection ipsec profile {{ dmvpn.crypto.name_ipsec_profile }} 
  {% endif %}
 {#====================Configure Spokes ==================================#}
  {% if inventory_hostname in tuns.spokes %}
-interface tunnel {{ tuns.tun_num }}
+interface Tunnel{{ tuns.tun_num }}
+ no ip redirects
     {% if  'bw' in tuns.spokes[inventory_hostname]  %}
  bandwidth {{ tuns.spokes[inventory_hostname].bw }}
     {% endif %}
@@ -39,13 +45,17 @@ interface tunnel {{ tuns.tun_num }}
    {% if  'mtu' in tuns.spokes[inventory_hostname]  %}
  ip mtu {{ tuns.spokes[inventory_hostname].mtu }}
     {% endif %}
+    {% if  'eigrp_delay' in tuns  %}
+ delay {{ tuns.eigrp_delay }}
+    {% endif %}
  ip nhrp shortcut
  ip nhrp holdtime 300
  {% for nhs_hubs in tuns.hubs %}
- ip nhrp nhs {{ tuns.hubs[nhs_hubs].ip_add | ipaddr('address') }} nbma {{ tuns.hubs[nhs_hubs].ip_src }} multicast priority {{ tuns.hubs[nhs_hubs].pri }} cluster {{ tuns.hubs[nhs_hubs].cluster }}
+ ip nhrp nhs {{ tuns.hubs[nhs_hubs].ip_add | ipaddr('address') }} nbma {{ tuns.hubs[nhs_hubs].ip_src }} multicast 
+ {# {{ tuns.hubs[nhs_hubs].pri }} cluster {{ tuns.hubs[nhs_hubs].cluster }}  #}
  {% endfor %}
- ip nhrp nhs cluster 1 max-connections 1
- ip nhrp nhs fallback 20
+{# ip nhrp nhs cluster 1 max-connections 1
+ ip nhrp nhs fallback 20 #}
  ip nhrp network-id {{ tuns.net_id }}
  ip nhrp registration no-unique
  if-state nhrp
@@ -59,6 +69,11 @@ interface tunnel {{ tuns.tun_num }}
     {% if  'vrf' in tuns.spokes[inventory_hostname]  %}
  tunnel vrf {{ tuns.spokes[inventory_hostname].vrf }}
     {% endif %} 
-  {% endif %}
+    {% if  inventory_hostname in dmvpn.crypto.spokes_shared %}
+ tunnel protection ipsec profile {{ dmvpn.crypto.name_ipsec_profile }} shared
+    {% else %}   
+ tunnel protection ipsec profile {{ dmvpn.crypto.name_ipsec_profile }} 
+    {% endif %}
+    {% endif %}
 {#======================================================#}
  {% endfor %}

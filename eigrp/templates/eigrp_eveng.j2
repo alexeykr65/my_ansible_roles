@@ -15,7 +15,7 @@ router eigrp {{eigrp.eigrp_name}}
     {% endfor %}
 {# ==================== Stub Site Num ================================== #}
     {% if  'stub_site' in eigrp %}
-  eigrp stub-site {{ eigrp.stub_site }}
+  eigrp stub connected summary
     {% endif %}
 {# ==================== Distribute List ================================== #}
     {% if  'distribute' in eigrp %}
@@ -25,6 +25,14 @@ router eigrp {{eigrp.eigrp_name}}
    {% endfor %}
    exit
     {% endif %}
+    {% if  'redistribute' in eigrp %}
+  topology base
+   {% for red in eigrp.redistribute %}
+   redistribute {{ red }}
+   {% endfor %}
+   exit
+    {% endif %}
+
 {# ==================== AF Interfaces ================================== #}
     {% if  'af_int' in eigrp %}
       {% for af_int in eigrp.af_int %}
@@ -47,7 +55,7 @@ router eigrp {{eigrp.eigrp_name}}
         {% endif %}
   {# ==================== Stub WAN (AF Interfaces) ================================== #}
         {% if  'stub_int' in af_int %}
-   stub-site wan-interface
+   !stub-site wan-interface
         {% endif %}
   {# ==================== Summary address ================================== #}
         {% if  'summary_address' in af_int %}
@@ -60,11 +68,5 @@ router eigrp {{eigrp.eigrp_name}}
       {% endfor %}
     {% endif %}
 {# ==================== Configure Delay on Interfaces ======================== #}
-    {% if  'delay' in eigrp %}
-      {% for delay in eigrp.delay %}
-interface {{ delay.int_name }}
- delay {{ delay.delay_num }}
-      {% endfor %}
-    {% endif %}
   {% endfor %}
 {% endif %}

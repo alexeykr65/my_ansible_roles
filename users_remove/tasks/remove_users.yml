@@ -1,0 +1,6 @@
+- name: Add User with password 
+  ios_user:
+    name: "{{ item }}"
+    state: absent
+  when: item not in exclude_users
+  loop: "{{ all_users }}"

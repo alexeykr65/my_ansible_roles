@@ -1,0 +1,17 @@
+- name: Get ios_facts 
+  ios_facts:
+    gather_subset:
+      - "!hardware"
+
+- name: Set facts
+  set_fact:
+    my_var: "{{ ansible_net_config | regex_findall('\\nusername\\s*([^\\s]*)\\s.*') }}"
+
+- name: Show users 
+  debug: 
+    var: my_var 
+
+- fail: 
+    msg= "Non exist user {{ item.name }} on {{ inventory_hostname }} "
+  when: item.name not in  my_var
+  loop: "{{ ADD_USERS }}"

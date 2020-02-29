@@ -1,0 +1,117 @@
+---
+#order: sorted
+# tasks file for DMVPN
+- name: Write sh dmvpn in variable
+  ios_command:
+    commands:
+      - sh dmvpn
+  register: spokes_list
+
+- name: Find IP addresses of spokes
+  set_fact:
+    dmvpn_spoke: "{{ spokes_list.stdout_lines[0] | join('\n') | regex_findall('\\s*\\d\\s*\\d*\\.\\d*\\.\\d*\\.\\d*\\s*(\\d*\\.\\d*\\.\\d*\\.\\d*)\\s*\\S*\\s*\\S*\\s*\\S*') }}"
+
+- name: Show DMVPN Count spokes
+  debug: 
+    msg: "{{ dmvpn_spoke | length }}"
+
+- name: Ping DMVPN spokes
+  net_ping:
+    dest: "{{ item }}"
+    count: 3
+  loop: "{{ dmvpn_spoke }}"
+
+
+- meta: end_play
+
+- name: Collect facts 
+  ios_facts:
+
+- name: Показать отдельные факты
+  debug:
+    msg: 
+      - "The hostname is {{ ansible_net_hostname }} and the OS is {{ ansible_net_version }}"
+      - "CDP neighbors: {{ ansible_net_neighbors }}"
+  tags:
+    - print_action
+
+# - say:
+#     msg: 
+#       - "The hostname is {{ ansible_net_hostname }} and the OS is {{ ansible_net_version }}"
+#     voice: Alex
+
+- name: Write facts to disk using a template
+  blockinfile:
+    create: yes
+    marker: "# {mark} Information of {{ inventory_hostname }}"
+    block: |
+      #jinja2: lstrip_blocks: True
+      IOS device info:
+        Hostname: {{ hostvars[inventory_hostname].ansible_net_hostname }}
+        Version: {{ hostvars[inventory_hostname].ansible_net_version }}
+        Model: {{ hostvars[inventory_hostname].ansible_net_model }}
+        Serial: {{ hostvars[inventory_hostname].ansible_net_serialnum }}
+    path: router-facts.txt
+
+- meta: end_play
+
+# - name: Write facts to disk using a template
+#   copy:
+#     content: |
+#       #jinja2: lstrip_blocks: True
+#       IOS device info:
+#         Hostname: {{ hostvars[inventory_hostname].ansible_net_hostname }}
+#         Version: {{ hostvars[inventory_hostname].ansible_net_version }}
+#         Model: {{ hostvars[inventory_hostname].ansible_net_model }}
+#         Serial: {{ hostvars[inventory_hostname].ansible_net_serialnum }}
+#     dest: router-facts.txt
+
+
+
+# - name: Show DMVPN Configuration
+#   set_fact:
+#     dmvpn_spokes_ping: "{{ dmvpn_spoke | regex_replace('\\s*(\\d*\\.\\d*\\.\\d*\\.\\d*)\\s*', 'ping  \\1 repeat 3') }}"
+
+# - name: Show DMVPN cfg
+#   debug: 
+#     msg: "{{ spokes_list.stdout_lines[0] }}"
+#   when: spokes_list.stdout_lines[0] | length > 1
+  
+# - name: Show DMVPN Configuration
+#   set_fact:
+#     dmvpn_spoke: "{{ spokes_list.stdout_lines[0] | join('\n') | regex_findall('\\s*1\\s*\\d*\\.\\d*\\.\\d*\\.\\d*\\s*(\\d*\\.\\d*\\.\\d*\\.\\d*)\\s*\\S*\\s*\\S*\\s*\\S*') }}"
+
+
+# - name: Set facts dmvpn_spokes_ping empty
+#   set_fact:
+#     dmvpn_spokes_ping: []
+
+# - name: Set facts dmvpn_spokes_ping empty spokes_list
+#   set_fact:
+#     dmvpn_spokes_ping: "{{ dmvpn_spokes_ping }}  +  [ 'ping  {{ item }}  repeat 3' ]"
+#   loop: "{{ dmvpn_spoke }}"
+
+
+# - name: Show DMVPN Count spokes
+#   debug: 
+#     msg: "{{ dmvpn_spokes_ping }}"
+
+
+# - name: Show DMVPN cfg
+#   debug: 
+#     msg: "{{ dmvpn_spoke }}"
+
+# - name: Debug Show DMVPN cfg
+#   debug: 
+#     msg: "{{ item }}"
+#   loop: "{{ dmvpn_spoke }}"
+# loop: "{{ lookup('dmvpn_spoke', 'all', wantlist=True) }}"  
+
+# - name: Ping DMVPN spokes
+#   ios_command:
+#     commands: "{{ dmvpn_spokes_ping }}"
+
+# - name: Ping DMVPN spokes
+#   ios_command:
+#     commands: "ping {{ item }} repeat 4"
+#   loop: "{{ dmvpn_spoke }}"

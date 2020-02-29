@@ -1,0 +1,18 @@
+---
+# tasks file for users_add
+- name: Get ios_facts 
+  ios_facts:
+    gather_subset:
+      - "!hardware"
+
+- name: Set facts usernames
+  set_fact:
+    all_users: "{{ ansible_net_config | regex_findall('\\nusername\\s*([^\\s]*)\\s.*') }}"
+
+- name: Check exist Exclude users
+  import_tasks: check_exclude_users.yml
+
+- name: Remove users
+  import_tasks: remove_users.yml
+
+

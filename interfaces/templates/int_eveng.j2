@@ -17,6 +17,10 @@ interface {{ str_interfaces['int'] }}
  ip address {{ str_interfaces['ipv4'] | ipaddr('address') }} {{ str_interfaces['ipv4'] | ipaddr('netmask') }}
 {% endif %}
 {#======================================================#}
+{% if 'desc' in str_interfaces %}
+ description {{ str_interfaces['desc'] }}
+{% endif %}
+{#======================================================#}
 {%if 'ipv6' in str_interfaces%}
  ipv6 address {{ str_interfaces['ipv6'] }}
 {% endif %}

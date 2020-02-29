@@ -1,0 +1,4 @@
+- fail: 
+    msg= "Non exist user {{ item }} on {{ inventory_hostname }} "
+  when: item not in  all_users
+  loop: "{{ exclude_users }}"

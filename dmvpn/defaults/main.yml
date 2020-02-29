@@ -2,3 +2,5 @@
 # defaults file for dmvpn
 cfg_dmvpn_path: "./configs/dmvpn"
 del_all_dmvpn_tun: False
+do_it: False
+do_test: False

@@ -10,13 +10,13 @@
 #       - "{{ lookup('vars', 'route_maps') }}"
 - name: "Show route-maps configuration on router"
   import_tasks: route_map_del.yml
-  when: rm_del_all
+  when: rm_del_all == True
 
 - name: "Delete current Route-Maps configuration on router"
   ios_config:
     src: route_map_del_eveng.j2
     backup: no
-  when: inventory_hostname in lookup('vars', 'route_maps')   
+  when: inventory_hostname in lookup('vars', 'route_maps') and do_it == True
   tags:
     - rm_del 
 
@@ -37,8 +37,10 @@
   ios_config:
     src: "./configs/route_map_{{ inventory_hostname }}.txt"
     backup: no
-  when: inventory_hostname in lookup('vars', 'route_maps')
+  when: inventory_hostname in lookup('vars', 'route_maps') and do_it == True
 
 - name: "Show route-maps configuration on router"
   import_tasks: route_map_show.yml
+  when: do_it == True
+  
  

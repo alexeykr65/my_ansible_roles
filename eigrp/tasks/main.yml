@@ -2,12 +2,14 @@
 # tasks file for EIGRP
 - name: "Get and Delete old EIGRP configuration "
   import_tasks: eigrp_del.yml
+  when: do_it|bool
 
 - name: "Check directory for config files "
   file:
     path: "{{cfg_eigrp_path}}"
     state: directory
   changed_when: false
+  run_once: true
   tags:
     - gen_cfg
 
@@ -32,8 +34,8 @@
   ios_config:
     src: "{{cfg_eigrp_path}}/eigrp_{{ inventory_hostname }}.txt"
     backup: no
-  when: inventory_hostname in eigrp 
+  when: inventory_hostname in eigrp and do_it|bool
 
 - name: "Show current EIGRP configuration "
   import_tasks: eigrp_show.yml
-
+  when: do_it|bool

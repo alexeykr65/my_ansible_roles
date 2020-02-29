@@ -40,11 +40,19 @@ crypto ipsec profile {{ dmvpn.crypto.name_ipsec_profile }}
 crypto ipsec security-association replay window-size 1024
 
 {% for tuns in dmvpn.tunnels %}
-interface tunnel {{ tuns.tun_num }}
  {% if  inventory_hostname in dmvpn_spks %}
- tunnel protection ipsec profile {{ dmvpn.crypto.name_ipsec_profile }}
+interface tunnel {{ tuns.tun_num }}
+  {% if  inventory_hostname in dmvpn.crypto.spokes_shared %}
+ tunnel protection ipsec profile {{ dmvpn.crypto.name_ipsec_profile }} shared
+  {% else %}   
+ tunnel protection ipsec profile {{ dmvpn.crypto.name_ipsec_profile }} 
+  {% endif %}
+  exit
  {% else %}
-  tunnel protection ipsec profile {{ dmvpn.crypto.name_ipsec_profile }} shared
- {% endif %}
+  {% if  inventory_hostname in tuns.hubs %}
+interface tunnel {{ tuns.tun_num }}
+ tunnel protection ipsec profile {{ dmvpn.crypto.name_ipsec_profile }} 
  exit
+  {% endif %}
+ {% endif %}
 {% endfor %}

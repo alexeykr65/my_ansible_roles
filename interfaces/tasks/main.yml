@@ -1,8 +1,10 @@
 ---
 # tasks file for interfaces
+- debug: var={{ do_it }}
+
 - name: "Reset Interfaces"
   import_tasks: int_reset.yml
-  when: int_reset !=  False
+  when: int_reset !=  False and do_it == True
   tags:
     - int_reset
 
@@ -11,11 +13,13 @@
     src: int_eveng.j2
     backup: no
   register: result_int
+  when: do_it == True
 
 - name: "Configure hostname"
   ios_config: 
     lines: 
       - "hostname {{ inventory_hostname }}"
+  when: do_it == True
 
 - name: "UP interfaces"
   ios_interface:
@@ -23,8 +27,10 @@
     enabled: True
   loop: "{{ interfaces[inventory_hostname] }}"
   register: result_up
+  when: do_it == True
 
 - name: "Save Configuration "
   ios_command: 
     commands: wr mem
-  when: result_int.changed or result_up.changed
+  when: result_int.changed or result_up.changed and do_it == True
+

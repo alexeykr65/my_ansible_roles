@@ -1,0 +1,8 @@
+---
+#tasks file for users_add
+- name: Add New User or Change Password of exist user
+  import_tasks: add_users.yml
+
+- name: Check exist users
+  import_tasks: check_users.yml
+

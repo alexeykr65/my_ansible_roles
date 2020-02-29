@@ -15,7 +15,7 @@
     current_crypto_keyring: "{{ ansible_net_config | regex_findall('\\ncrypto ikev2 keyring(.*)') }}"
     current_crypto_ike_policy: "{{ ansible_net_config | regex_findall('\\ncrypto ikev2 policy(.*)') }}"
     current_crypto_ike_proposal: "{{ ansible_net_config | regex_findall('\\ncrypto ikev2 proposal(.*)') }}"
-  when: inventory_hostname in dmvpn_hosts    
+  when: inventory_hostname in dmvpn_hosts  and do_it|bool
   tags:
     - cfg_del_crypto
     - cfg_del
@@ -34,16 +34,16 @@
 #     - cfg_del_crypto
 #     - cfg_del
 
-- name: "Delete DMVPN CRYPTO on router from configuration file "
+- name: "Delete  CRYPTO DMVPN on router from configuration file "
   ios_config:
     src: dmvpn_del_crypto.j2
     backup: no
-  when: inventory_hostname in dmvpn_hosts 
+  when: inventory_hostname in dmvpn_hosts and do_it|bool
   tags:
     - cfg_del_crypto
     - cfg_del
 
-- name: "Generating new local DMVPN CRYPTO configuration files"
+- name: "Generating new local CRYPTO DMVPN configuration files"
   template:
     src: dmvpn_crypto.j2
     dest: "{{cfg_dmvpn_path}}/dmvpn_crypto_{{ inventory_hostname }}.txt"
@@ -57,5 +57,5 @@
   ios_config:
     src: "{{cfg_dmvpn_path}}/dmvpn_crypto_{{ inventory_hostname }}.txt"
     backup: no
-  when: inventory_hostname in dmvpn_hosts 
+  when: inventory_hostname in dmvpn_hosts  and do_it|bool
 

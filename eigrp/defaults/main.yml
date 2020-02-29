@@ -4,4 +4,6 @@ cfg_eigrp_path: "./configs/eigrp"
 show_facts: False
 hello_interval: 20
 hold_time: 60
+do_it: False
+
 
