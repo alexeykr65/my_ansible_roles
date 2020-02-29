@@ -5,4 +5,4 @@
     configured_password: "{{ item.pass }}"
     update_password: always
     state: present
-  loop: "{{ ADD_USERS }}"
+  loop: "{{ add_users }}"

@@ -12,6 +12,6 @@
     var: my_var 
 
 - fail: 
-    msg= "Non exist user {{ item.name }} on {{ inventory_hostname }} "
+    msg: "Non exist user {{ item.name }} on {{ inventory_hostname }} "
   when: item.name not in  my_var
-  loop: "{{ ADD_USERS }}"
+  loop: "{{ add_users }}"
