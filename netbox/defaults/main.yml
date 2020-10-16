@@ -1,0 +1,7 @@
+---
+# defaults file for netbox
+db_netbox_pass: cisco
+netbox_url: netbox.lanhome.org
+admin_user: admin
+admin_email: admin@example.com
+admin_pass: cisco

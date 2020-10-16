@@ -1,0 +1,5 @@
+---
+# tasks file for heat
+- name: Create VM Centos
+  import_tasks: centos.yml
+  when: vm_centos|bool

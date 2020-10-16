@@ -1,0 +1,37 @@
+---
+# tasks file for heat
+- name: Get information of servers
+  os_server_info:
+    server: "{{ stack_name }}"
+  register: os_ret
+
+- name: Check whether a server is present
+  fail:
+    msg: " Server {{ stack_name }} exist"
+  when: os_ret.openstack_servers|length > 0
+
+- name: Define Variable
+  set_fact: 
+    file_stack: "stack-centos-float-ips.yaml"
+  when: fl_ips
+
+- name: Show message
+  debug: 
+    msg: "{{ file_stack }}"
+
+- name: Create stack
+  #ignore_errors: True
+  register: stack_create
+  os_stack:
+    name: "{{ stack_name }}"
+    tag: "{{ tag_name }}"
+    state: present
+    template: "{{ role_path }}/files/{{ file_stack }}"
+    parameters:
+        wan_ip: "{{ wan_ip }}"
+        avail_zone: "{{ avail_zone }}"
+        flavor: "{{ flavor }}"
+
+- name: Show stack info
+  debug:
+    msg: "{{ stack_create }}"

@@ -1,0 +1,51 @@
+---
+# tasks file for grafana
+
+- name: GRAFANA=>> Upgrade all packages
+  dnf:
+    name: '*'
+    state: latest    
+
+- name: GRAFANA=>> populate service facts
+  service_facts:
+
+- name: GRAFANA=>> Make sure a some service is stoped
+  systemd:
+    state: stopped
+    name: "{{ item }}"
+    enabled: no
+  when: item in ansible_facts.services
+  with_items:
+    - "firewalld.service"
+
+- name: GRAFANA=>> Create file /etc/
+  copy:
+    dest: "/etc/yum.repos.d/grafana.repo"
+    content: |
+      [grafana]
+      name=grafana
+      baseurl=https://packages.grafana.com/oss/rpm
+      repo_gpgcheck=1
+      enabled=1
+      gpgcheck=1
+      gpgkey=https://packages.grafana.com/gpg.key
+      sslverify=1
+      sslcacert=/etc/pki/tls/certs/ca-bundle.crt
+
+- name: GRAFANA=>> Install grafana
+  dnf:
+    name: ['grafana', 'freetype*']
+    state: present
+    update_cache: yes
+
+- name: GRAFANA=>> Enable services grafana
+  systemd:
+    name: "{{ item }}"
+    enabled: yes
+    state: started
+  with_items:
+    - grafana-server
+
+- name: GRAFANA=>> Show url and admin password
+  debug:
+    msg: "url: http://{{ ansible_ssh_host }}:3000 \nSuperuser: admin Pass: admin"

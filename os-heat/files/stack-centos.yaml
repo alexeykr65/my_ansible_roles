@@ -1,0 +1,153 @@
+heat_template_version: rocky
+  #rocky
+
+parameters:
+    key_name:
+        type: string
+        label: Key Name
+        default: mykey
+    avail_zone:
+        type: string
+        label: Zone
+        default: 'nova:osc'
+    image:
+        type: string
+        label: Image ID
+        default: centos8.2
+    flavor:
+        type: string
+        label: Flavor ID
+        default: centos.small
+    SecGroup:
+        type: string
+        label: Security Group
+        default: SecGroupMain
+    wan_net:
+        type: string
+        default: wan1
+    wan_ip:
+        type: string
+        default: 192.168.180.35
+    lan1_net:
+        type: string
+        default: lan1
+
+resources:
+
+  cloud-init-config:
+    #cloud init demo resource
+    type: OS::Heat::CloudConfig
+    properties:
+      cloud_config:
+        write_files:
+          - content: |
+              # Created by cloud-init on instance boot automatically, do not edit.
+              # My cloud-init-config 
+              BOOTPROTO=dhcp
+              DEVICE=eth0
+              MTU=1450
+              ONBOOT=yes
+              DEFROUTE=yes
+              TYPE=Ethernet
+            permissions: 0644
+            path: /etc/sysconfig/network-scripts/ifcfg-eth0
+          - content: |
+              # Created by cloud-init on instance boot automatically, do not edit.
+              # My cloud-init-config 
+              BOOTPROTO=dhcp
+              DEVICE=eth1
+              MTU=1450
+              ONBOOT=yes
+              DEFROUTE=no
+              TYPE=Ethernet
+            permissions: 0644
+            path: /etc/sysconfig/network-scripts/ifcfg-eth1
+        users:
+          - name: alex
+            gecos:  Service user
+            lock-passwd: false
+            shell: /bin/bash
+            ssh-authorized-keys: 
+              - 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCtMF3geoAOgRAzw5X9n2XIPk+yVX2mPESc/o5a1mAvdNQmm1Xdd191YDN2pSXRLYA826Vi10MKWXPKonNh8pPk8E0zOjdkZl426nwA1ixGjoM+HTrn+mjQXdL/do/R/IXRHiV19b58mlMtBjEyTegWDJSue1MftFYCdhDMAutqhFhkWL6aL5okZlAdoZpgFh5+XY06Qh6aRQJveoCo2Soyg0RhLNyR7Ggyv/BsD5VgxKo4ROGGcfpix/aoye84zsI6dPIxodgdWYmACKbgJP1FL2TAxUaRa+/vhL/hiv9bX6Edq10VYMwpzkHEP3dtiyQKJHlKrtbpafUVUInicQJX alex@Alexeys-MacBook-Pro.local'
+            sudo: ALL=(ALL) NOPASSWD:ALL
+        # packages:
+        #   - python36
+        #   - epel-release
+        #   - wget
+        runcmd:
+          - [ systemctl, restart, network.service ]          
+          # - [ dnf, makecache ]
+          # - [ dnf, install, ansible, -y ]
+
+
+  vol_cinder1:
+    type: OS::Cinder::Volume
+    properties:
+      name: 
+        list_join: ['-', [{ get_param: "OS::stack_name" }, "vol-cinder1"] ] 
+      size: 40
+
+  server: 
+    type: OS::Nova::Server 
+    depends_on: [ cloud-init-config, port_wan ]
+    properties: 
+      name: { get_param: OS::stack_name }
+      image: { get_param: image} 
+      flavor: { get_param: flavor }
+      key_name: { get_param: key_name }
+      availability_zone: { get_param: avail_zone}
+      user_data_format: RAW
+      user_data: { get_resource: cloud-init-config }
+      block_device_mapping: 
+        - { device_name: sdb, volume_id: { get_resource: vol_cinder1 }, delete_on_termination: true }
+      #metadata: { get_param: metadata }  
+      networks:
+        - port: { get_resource: port_wan }
+        - network: lan2
+
+
+  port_wan:
+    type: OS::Neutron::Port
+    properties:
+      network: { get_param: wan_net }
+      # port_security_enabled: false
+      name: 
+        list_join: ['-', [{ get_param: OS::stack_name }, 'port-wan'] ]
+      fixed_ips: 
+        - ip_address: { get_param: wan_ip }
+      security_groups:
+        - { get_param: SecGroup }
+
+
+  # port_lan1:
+  #   type: OS::Neutron::Port
+  #   properties:
+  #     network: { get_param: lan1_net }
+  #     # port_security_enabled: false
+  #     name: 
+  #       list_join: ['-', [{ get_param: OS::stack_name }, 'port-lan1'] ]
+  #     fixed_ips: 
+  #       - ip_address: { get_param: lan1_ip_fix2 }
+  #     security_groups:
+  #       - { get_param: SecGroup }
+
+
+
+  # port_floating_ip:
+  #   type: OS::Neutron::FloatingIP
+  #   depends_on: [ port2_lan1 ]
+  #   properties:
+  #     floating_network: { get_param: wan0_net }
+  #     floating_ip_address: { get_param: wan0_ip_fix2 }
+  #     port_id: { get_resource: port2_lan1 }
+
+
+
+
+outputs:
+  # router_ip:
+  #   description: IP address of the deployed compute instance
+  #   value: { get_attr: [router, first_address] }
+  # router_public_ip:
+  #   description: IP Address of pivot in public network
+  #   value: { get_attr: [router_floating_ip, floating_ip_address] }

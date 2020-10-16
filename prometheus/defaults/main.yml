@@ -1,0 +1,4 @@
+---
+# defaults file for prometheus
+db_root_pass: cisco
+db_ipam_pass: cisco

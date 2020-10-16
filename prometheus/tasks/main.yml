@@ -1,0 +1,144 @@
+---
+# tasks file for prometheus
+- name: PROMETHEUS=>> Upgrade all packages
+  dnf:
+    name: '*'
+    state: latest    
+- name: PROMETHEUS=>> Add some packages
+  dnf:
+    name: [ wget, chrony, tar,epel-release]
+    state: present
+# - name: PHP-IPAM=>> Make sure the some services is running
+#   systemd:
+#     state: started
+#     enabled: yes
+#     name: "{{ item }}"
+#   with_items:
+#     - "httpd"
+#     - "php-fpm"
+- name: PROMETHEUS=>> populate service facts
+  service_facts:
+- name: PROMETHEUS=>> Make sure a some service is stoped
+  systemd:
+    state: stopped
+    name: "{{ item }}"
+    enabled: no
+  when: item in ansible_facts.services
+  with_items:
+    - "firewalld.service"
+- name: PROMETHEUS=>> Ensure group "prometheus" exists
+  group:
+    name: prometheus
+    state: present
+    system: yes
+- name: PROMETHEUS=>> Ensure user "prometheus"
+  user:
+    name: prometheus
+    state: present
+    groups: prometheus
+    system: yes
+- name: PROMETHEUS=>> Create a directories if it does not exist
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+    owner: prometheus
+    group: prometheus
+  with_items:
+    - '/app/prometheus'
+    - '/etc/prometheus/rules'
+    - '/etc/prometheus/rules.d'
+    - '/etc/prometheus/files_sd'
+- name: PROMETHEUS=>> Unarchive a file prometheus-2.20.0-rc.1.linux-amd64.tar.gz
+  unarchive:
+    src: https://github.com/prometheus/prometheus/releases/download/v2.20.0-rc.1/prometheus-2.20.0-rc.1.linux-amd64.tar.gz
+    dest: /app
+    remote_src: yes
+- name: PROMETHEUS=>> Copy prometheus and promtool
+  copy:
+    remote_src: yes
+    src: "{{ item }}"
+    dest: /usr/local/bin/
+    mode: '0755'
+    owner: prometheus
+    group: prometheus
+  with_items:
+    - '/app/prometheus-2.20.0-rc.1.linux-amd64/prometheus'
+    - '/app/prometheus-2.20.0-rc.1.linux-amd64/promtool'
+- name: PROMETHEUS=>> Copy console and console_libraries
+  copy:
+    remote_src: yes
+    src: "{{ item }}"
+    dest: /etc/prometheus
+    mode: '0755'
+    owner: prometheus
+    group: prometheus
+  with_items:
+    - '/app/prometheus-2.20.0-rc.1.linux-amd64/console_libraries'
+    - '/app/prometheus-2.20.0-rc.1.linux-amd64/consoles'
+- name: PROMETHEUS=>> Copy tsdb
+  copy:
+    remote_src: yes
+    src: "{{ item }}"
+    dest: /app/prometheus
+    mode: '0755'
+    owner: prometheus
+    group: prometheus
+  with_items:
+    - '/app/prometheus-2.20.0-rc.1.linux-amd64/tsdb'
+- name: PROMETHEUS=>> Create file /etc/prometheus/prometheus.yml
+  copy:
+    dest: "/etc/prometheus/prometheus.yml"
+    mode: '0755'
+    owner: prometheus
+    group: prometheus
+    content: |
+      #Global config
+      global:
+        scrape_interval: 15s
+        evaluation_interval: 15s
+        scrape_timeout: 15s
+      scrape_configs:
+        - job_name: 'prometheus'
+          static_configs:
+            - targets: ['localhost:9090']
+- name: PROMETHEUS=>> Create file /etc/systemd/system/prometheus.service
+  copy:
+    dest: "/etc/systemd/system/prometheus.service"
+    content: |
+      [Unit]
+      Description=Prometheus
+      Documentation=https://prometheus.io/docs/introduction/overview/
+      Wants=network-online.target
+      After=network-online.target
+      
+      [Service]
+      Type=simple
+      Environment="GOMAXPROCS=2"
+      User=prometheus
+      Group=prometheus
+      ExecReload=/bin/kill -HUP $MAINPID
+      ExecStart=/usr/local/bin/prometheus \
+      --config.file=/etc/prometheus/prometheus.yml \
+      --storage.tsdb.path=/app/prometheus \
+      --web.console.templates=/etc/prometheus/consoles \
+      --web.console.libraries=/etc/prometheus/console_libraries \
+      --web.listen-address=0.0.0.0:9090 \
+      --web.external-url=
+      SyslogIdentifier=prometheus
+      Restart=always
+      
+      [Install]
+      WantedBy=multi-user.target
+- name: PROMETHEUS=>> Enable services prometheus
+  systemd:
+    daemon_reload: yes
+    name: "{{ item }}"
+    enabled: yes
+    state: started
+  with_items:
+    - prometheus
+    - chronyd
+- name: PROMETHEUS=>> Show url and admin password
+  debug:
+    msg: "url: http://{{ ansible_ssh_host }}:9090 \nlogin: admin pass: ipamadmin"

@@ -1,0 +1,6 @@
+---
+# defaults file for heat
+file_stack: "stack-centos.yaml"
+fl_ips: False
+avail_zone: 'nova:osc'
+vm_centos: True

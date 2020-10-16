@@ -1,0 +1,185 @@
+---
+# tasks file for netbox
+
+    # db_netbox_pass: cisco
+    # netbox_url: netbox.lanhome.org
+    # admin_user: admin
+    # admin_email: admin@example.com
+    # admin_pass: cisco
+
+- name: NETBOX=>> Upgrade all packages
+  dnf:
+    name: '*'
+    state: latest    
+- name: NETBOX=>> Add some packages
+  dnf:
+    name: [ 'chrony', '@httpd', epel-release]
+    state: present
+- name: NETBOX=>> populate service facts
+  service_facts:
+- name: NETBOX=>> Make sure a some service is stoped
+  systemd:
+    state: stopped
+    name: "{{ item }}"
+    enabled: no
+  when: item in ansible_facts.services
+  with_items:
+    - "firewalld.service"
+- name: NETBOX=>> Add packages for NETBOX
+  dnf:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+      - gcc
+      - git
+      - libxml2-devel
+      - libxslt
+      - fping
+      - libffi-devel 
+      - graphviz 
+      - libxslt-devel 
+      - openssl-devel 
+      - postgresql 
+      - postgresql-server 
+      - postgresql-server-devel 
+      - postgresql-contrib 
+      - redhat-rpm-config
+      - redis
+- name: NETBOX=>> Init Postgresql 
+  shell: >
+    postgresql-setup initdb
+- name: NETBOX=>> Change 'ident' to 'md5' in file /var/lib/pgsql/data/pg_hba.conf
+  replace:
+    path: /var/lib/pgsql/data/pg_hba.conf
+    regexp: 'ident'
+    replace: 'md5'
+- name: NETBOX=>> Enable services postgresql and redis
+  systemd:
+    name: "{{ item }}"
+    enabled: yes
+    state: started
+  with_items:
+    - postgresql
+    - redis
+- name: NETBOX=>> Create database netbox and user 'netbox' 
+  shell: |
+    echo 'CREATE DATABASE netbox;' | sudo -u postgres psql
+    echo "CREATE USER netbox WITH PASSWORD '{{ db_netbox_pass }}';" | sudo -u postgres psql
+    echo 'GRANT ALL PRIVILEGES ON DATABASE netbox TO netbox;' | sudo -u postgres psql
+- name: NETBOX=>> Git clone NETBOX to /opt/netbox
+  git:
+    repo: 'https://github.com/netbox-community/netbox.git'
+    dest: /opt/netbox
+    version: master
+- name: NETBOX=>> Install python packages from /opt/netbox/requirements.txt
+  shell: |
+    pip3.6 install -r /opt/netbox/requirements.txt
+    pip3 install napalm
+- name: NETBOX=>> Ensure group "netbox" exists
+  group:
+    name: netbox
+    state: present
+    system: yes
+- name: NETBOX=>> Ensure user "netbox"
+  user:
+    name: netbox
+    state: present
+    groups: netbox
+    system: yes
+- name: NETBOX=>> Change permission on files in /opt/netbox/netbox/media/
+  file:
+    dest: "/opt/netbox/netbox/media/"
+    owner: netbox
+    recurse: yes
+- name: NETBOX=>> Copy configuration.example.py to configuration.py
+  copy:
+    remote_src: yes
+    src: /opt/netbox/netbox/netbox/configuration.example.py
+    dest: /opt/netbox/netbox/netbox/configuration.py
+- name: NETBOX=>> Change file /opt/netbox/netbox/netbox/configuration.py
+  lineinfile:
+    path: /opt/netbox/netbox/netbox/configuration.py
+    regexp: '{{item.From}}'
+    line: '{{item.To}}'
+    state: present  
+  with_items:
+   - { From: "^ALLOWED_HOSTS.*", To: "ALLOWED_HOSTS = ['{{ netbox_url }}', '{{ ansible_ssh_host }}']"}
+   - { From: "^\\s+'USER'.*", To: "    'USER': 'netbox',"}
+   - { From: "PostgreSQL password", To: "    'PASSWORD': '{{ db_netbox_pass }}',"}
+   - { From: "SECRET_KEY", To: "SECRET_KEY = 'a1yX0_B$dcSIje)np^AWYG%3H95Pku82FxVDU&6l-KhT4!NCwf'"}
+- name: NETBOX=>> Init database netbox 
+  shell: |
+    cd /opt/netbox/netbox/
+    python3 manage.py migrate
+    python3 manage.py collectstatic --no-input
+  register: ret_manage
+- name: NETBOX=>> Show return messages
+  debug:
+    msg: "{{ ret_manage }}"
+- name: NETBOX=>> Copy gunicorn.py
+  copy:
+    remote_src: yes
+    src: /opt/netbox/contrib/gunicorn.py
+    dest: /opt/netbox/gunicorn.py
+- name: NETBOX=>> Copy etbox-rq.service
+  copy:
+    remote_src: yes
+    src: /opt/netbox/contrib/netbox-rq.service
+    dest: /etc/systemd/system/netbox-rq.service
+- name: NETBOX=>> Copy netbox.service
+  copy:
+    remote_src: yes
+    src: /opt/netbox/contrib/netbox.service
+    dest: /etc/systemd/system/netbox.service
+- name: NETBOX=>> Copy config.php
+  copy:
+    remote_src: yes
+    src: /opt/netbox/contrib/apache.conf
+    dest: /etc/httpd/conf.d/netbox.conf
+- name: NETBOX=>> Delete line ssl in apache netbox.conf
+  lineinfile:
+    path: /etc/httpd/conf.d/netbox.conf
+    regexp: 'SSL'
+    state: absent
+- name: NETBOX=>> Change 443 port on 80 port
+  replace:
+    path: /etc/httpd/conf.d/netbox.conf
+    regexp: '443'
+    replace: '80'
+- name: NETBOX=>> Change ServerName in file /etc/httpd/conf.d/netbox.conf
+  lineinfile:
+    path: /etc/httpd/conf.d/netbox.conf
+    regexp: '{{item.From}}'
+    line: '{{item.To}}'
+    state: present  
+  with_items:
+   - { From: "ServerName", To: "    ServerName {{ netbox_url }}"}
+- name: NETBOX=>> Change path to gunicorn in  /etc/systemd/system/netbox.service
+  replace:
+    path: /etc/systemd/system/netbox.service
+    regexp: '/opt/netbox/venv/bin/gunicorn'
+    replace: '/usr/local/bin/gunicorn'
+- name: NETBOX=>> Change path to python3 in  /etc/systemd/system/netbox-rq.service
+  replace:
+    path: /etc/systemd/system/netbox-rq.service
+    regexp: '/opt/netbox/venv/bin/python3'
+    replace: '/usr/bin/python3'
+- name: NETBOX=>> Enable services netbox
+  systemd:
+    daemon_reload: yes
+    name: "{{ item }}"
+    enabled: yes
+    state: started
+  with_items:
+    - netbox
+    - netbox-rq
+    - httpd
+    - chronyd
+- name: NETBOX=>> Set superuser account - {{ admin_user }}
+  shell: |
+    python3 /opt/netbox/netbox/manage.py shell -c "from django.contrib.auth.models import User; User.objects.create_superuser('{{ admin_user }}', '{{ admin_email }}', '{{ admin_pass }}')"
+- name: NETBOX=>> Show url and admin password
+  debug:
+    msg: "url: http://{{ ansible_ssh_host }} \nSuperuser: {{ admin_user }} Pass: {{ admin_pass }}"
