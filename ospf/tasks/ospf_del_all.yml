@@ -1,21 +1,31 @@
 ---
 # tasks file for ospf
-- name: Collect facts
-  ios_facts:
-    gather_subset:
-      - "!hardware"
-  tags:
-    - cfg_del
 
-- name: Set fact ospf processes
+- name: Get config OSPF from routers
+  ios_command:
+    commands: "sh run"
+  register: res_sh_run
+  tags:
+    - ospf_del
+
+- name: Prepare config for delete OSPF 
   set_fact:
-    current_ospf_proc: "{{ ansible_net_config | regex_findall('router ospf (.*)') }}"
+    int_info: "{{ res_sh_run.stdout[0] | ios_run_conf_int_ospf }}"
   tags:
-    - cfg_del
+    - ospf_del
 
-- name: "Delete current all OSPF on router"
-  ios_config:
-    src: ospf_del_all_eveng.j2
-    backup: no
+- name: Show config for delete
+  debug:
+    msg: 
+      - "{{ int_info }}"
   tags:
-    - cfg_del
+    - ospf_del
+
+
+- name: Erase ospf configuration
+  ios_config:
+    lines: 
+      - "{{ int_info }}"
+  tags:
+    - ospf_del
+
