@@ -1,72 +1,71 @@
 #jinja2: trim_blocks: True, lstrip_blocks: True
 {# Configure EIGRP for IOS #}
-{% if  inventory_hostname in eigrp %}
 {# ====================Configure EIGRP ================================== #}
-  {% for eigrp in eigrp[inventory_hostname] %}
-router eigrp {{eigrp.eigrp_name}}
+{% for eg in eigrp %}
+router eigrp {{eg.eigrp_name}}
 {# ==================== Address Family ================================== #}
- address-family ipv4 unicast autonomous-system {{ eigrp.address_family }}
-    {% if  'router_id' in eigrp %}
-  eigrp router-id {{ eigrp.router_id }}
-    {% endif %}
+ address-family ipv4 unicast autonomous-system {{ eg.address_family }}
+  {% if  'router_id' in eg %}
+  eigrp router-id {{ eg.router_id }}
+  {% endif %}
 {# ==================== Networks ================================== #}
-    {% for net in eigrp.networks %}
+  {% for net in eg.networks %}
   network {{ net['net'] | ipaddr('network') }} {{ net['net'] | ipaddr('hostmask') }}
-    {% endfor %}
+  {% endfor %}
 {# ==================== Stub Site Num ================================== #}
-    {% if  'stub_site' in eigrp %}
+  {% if  'stub_site' in eg %}
   eigrp stub connected summary
-    {% endif %}
+  {% endif %}
 {# ==================== Distribute List ================================== #}
-    {% if  'distribute' in eigrp %}
+  {% if  'distribute' in eg %}
   topology base
-   {% for net in eigrp.distribute %}
+  {% for net in eg.distribute %}
    distribute-list route-map {{ net.dis_name }} {{ net.direction }}
-   {% endfor %}
+  {% endfor %}
    exit
-    {% endif %}
-    {% if  'redistribute' in eigrp %}
+  {% endif %}
+  {% if  'redistribute' in eg %}
   topology base
-   {% for red in eigrp.redistribute %}
+  {% for red in eg.redistribute %}
    redistribute {{ red }}
-   {% endfor %}
+  {% endfor %}
    exit
-    {% endif %}
+  {% endif %}
 
 {# ==================== AF Interfaces ================================== #}
-    {% if  'af_int' in eigrp %}
-      {% for af_int in eigrp.af_int %}
+  {% if  'af_int' in eg %}
+     {% for af_int in eg.af_int %}
   af-interface {{ af_int.int_name }}
-        {% if  'hello_interval' in af_int %}
+       {% if  'hello_interval' in af_int %}
    hello-interval {{ af_int.hello_interval }}
-        {% endif %}
-        {% if  'hold_time' in af_int %}
+       {% endif %}
+       {% if  'hold_time' in af_int %}
    hold-time {{ af_int.hold_time }}
-        {% endif %}
-        {% if  'split_horizon' in af_int %}
+       {% endif %}
+       {% if  'split_horizon' in af_int %}
    no split-horizon
-        {% endif %}
-        {% if  'passive_int' in af_int %}
-          {% if  af_int.passive_int %}
+       {% endif %}
+       {% if  'passive_int' in af_int %}
+         {% if  af_int.passive_int %}
    passive-interface
-          {% else %}
+         {% else %}
    no passive-interface
-          {% endif %}
-        {% endif %}
+         {% endif %}
+       {% endif %}
   {# ==================== Stub WAN (AF Interfaces) ================================== #}
-        {% if  'stub_int' in af_int %}
+       {% if  'stub_int' in af_int %}
    !stub-site wan-interface
-        {% endif %}
+       {% endif %}
   {# ==================== Summary address ================================== #}
-        {% if  'summary_address' in af_int %}
-          {% for summ in af_int.summary_address %}
+       {% if  'summary_address' in af_int %}
+         {% for summ in af_int.summary_address %}
    summary-address {{ summ | ipaddr('network') }} {{ summ | ipaddr('netmask') }}
-          {% endfor %}
-        {% endif %}
+         {% endfor %}
+       {% endif %}
 {# ==================== Exit AF Interfaces ================================== #}
    exit
-      {% endfor %}
-    {% endif %}
+     {% endfor %}
+   {% endif %}
 {# ==================== Configure Delay on Interfaces ======================== #}
-  {% endfor %}
-{% endif %}
+{% endfor %}
+

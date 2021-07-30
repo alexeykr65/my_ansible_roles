@@ -1,6 +1,6 @@
 ---
 # tasks file for EIGRP
-- name: Write EIGRP cfg in variable
+- name: EIGRP=>> Write EIGRP cfg in variable
   ios_command:
     commands:
       - sh run | s ^router eigrp
@@ -8,7 +8,7 @@
   tags:
     - cfg_show
 
-- name: Show EIGRP cfg
+- name: EIGRP=>> Show EIGRP cfg
   debug: 
     msg: "{{ eigrp_cfg.stdout_lines[0] }}"
   when: eigrp_cfg.stdout_lines[0] | length > 1

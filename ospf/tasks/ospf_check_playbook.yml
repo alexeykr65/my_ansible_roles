@@ -1,0 +1,67 @@
+---
+# nots_playbook.yaml
+- name: "BLOCK >> Perform logging preparation"
+  block:
+    - name: "LOG >> Get ansible date/time facts"
+      setup:
+        filter: "ansible_date_time"
+        gather_subset: "!all"
+
+    - name: "LOG >> Store DTG as fact"
+      set_fact:
+        DTG: "{{ ansible_date_time.iso8601_basic_short }}"
+
+    - name: "LOG >> Ensure output logging directory exists"
+      file:
+        path: "logs"
+        state: "directory"
+      changed_when: false
+
+    - name: "LOG >> Store the log directory for this run"
+      set_fact:
+        LOG_PATH: "logs/nots_{{ DTG }}/"
+
+    - name: "LOG >> Build logging directory with path {{ LOG_PATH }}"
+      file:
+        path: "{{ LOG_PATH }}"
+        state: "directory"
+      changed_when: false
+  when: "ospf_log"
+  run_once: true
+
+- name: "SYS >> Ensure mandatory keys are specified"
+  assert:
+    that:
+      - "process.id is defined"
+      - "process.id | int > 0 and process.id < 65536"
+      - "ospf_check_rtr.my_areas is defined and ospf_check_rtr.my_areas | length > 0"
+      - "all_areas is defined and all_areas.keys() | length > 0"
+    msg: "Mandatory keys incorrectly formatted or omitted (see README.md)"
+
+- name: "INCLUDE >> Load commands for {{ ansible_network_os }} device"
+  include_tasks: "{{ ansible_network_os }}_main.yml"
+
+- name: "BLOCK >> Perform network-wide validation tests"
+  block:
+    - name: "SYS >> Store empty OSPF RID list for future comparison"
+      set_fact:
+        OSPF_RIDS: []
+
+    - name: "SYS >> Build OSPF RID list by iterating through hostvars"
+      set_fact:
+        OSPF_RIDS: "{{ OSPF_RIDS + [item.value.OSPF_BASIC.process.rid] }}"
+      when: >-
+        item.key in groups.ospf_routers and
+        item.value.OSPF_BASIC is defined
+      loop: "{{ dict(hostvars) | dict2items }}"
+      loop_control:
+        label: "host:{{ item.key }}"
+
+    - name: "SYS >> Assert that there are no duplicate OSPF RIDs"
+      assert:
+        that: "OSPF_RIDS | unique | length == OSPF_RIDS | length"
+        msg: |-
+          OSPF_RIDS contained duplicates. Check the logs to find bad nodes.
+          {{ OSPF_RIDS | to_nice_json }}
+  run_once: true
+

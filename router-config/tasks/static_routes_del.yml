@@ -1,0 +1,10 @@
+---
+- name: Prepare config static routing for delete
+  set_fact:
+    int_info: "{{ res_sh_run.stdout[0] | ios_run_conf_routing(True) }}"
+
+- name: Show config for delete
+  debug:
+    msg: 
+      - "{{ int_info }}"
+

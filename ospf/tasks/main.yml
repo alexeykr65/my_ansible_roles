@@ -1,32 +1,74 @@
 ---
 # tasks file for ospf
 
-- name: "Delete current all OSPF configuration "
+- name: "OSPF=>> Get current OSPF configuration "
   import_tasks: ospf_del_all.yml
   when: ospf_del_all
+  tags:
+    - ospf_del
+    - ospf_view
+    - view_del
+    - all_del
+    - ospf_cfg
 
-- name: "Delete current OSPF configuration "
-  import_tasks: ospf_del.yml
-  when: not ospf_del_all
+- name: OSPF=>> Erase ospf configuration
+  ios_config:
+    lines: 
+      - "{{ int_info }}"
+  when: (int_info | length) > 0
+  tags:
+    - ospf_del
+    - all_del
+    - ospf_cfg
 
-- name: "Check directory for config files "
+- name: OSPF=>> Wait for 2 sec
+  pause:
+    seconds: 2
+  tags:
+    - ospf_cfg
+
+# - name: "Delete current OSPF configuration "
+#   import_tasks: ospf_del.yml
+#   when: not ospf_del_all
+
+- name: "OSPF=>> Check directory for config files "
   file:
     path: "{{cfg_ospf_path}}"
     state: directory
+  run_once: true
   changed_when: false
-
-- name: "Generating new OSPF configuration files"
+  tags:
+    - ospf_cfg
+    - ospf_cfg_gen
+    
+- name: "OSPF=>> Generating new OSPF configuration files"
   template:
     src: ospf_eveng.j2
     dest: "{{cfg_ospf_path}}/ospf_{{ inventory_hostname }}.txt"
     trim_blocks: True
     lstrip_blocks: True    
+  when: ospf is defined
+  tags:
+    - ospf_cfg
+    - ospf_cfg_gen
 
-- name: "Configure OSPF on router"
+- name: "OSPF=>> Configure OSPF on router"
   ios_config:
-    src: ospf_eveng.j2
+    src: "{{cfg_ospf_path}}/ospf_{{ inventory_hostname }}.txt"
     backup: no
+  when: ospf is defined
+  tags:
+    - ospf_cfg
 
-- name: "Show current OSPF configuration "
+- name: "OSPF=>> Show current OSPF configuration "
   import_tasks: ospf_show.yml
+  tags:
+    - ospf_cfg
+
+- name: "OSPF=>> Check OSPF configuration"
+  import_tasks: ospf_check_playbook.yml
+  when: ospf_check
+  tags:
+    - ospf_check
+    - ospf_cfg
 

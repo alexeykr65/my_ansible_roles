@@ -2,5 +2,8 @@
 # tasks file for interfaces
 - name: "Reset Interfaces"
   ios_config:
-    lines: "default interface {{ item['int'] }}"
-  loop: "{{ interfaces[inventory_hostname] }}"
+    lines: "default interface {{ item.name }}"
+  when: item.name is not search("loopback") and interfaces is defined
+  loop: "{{ interfaces }}"
+  
+  

@@ -1,0 +1,89 @@
+---
+- name: Get configs from routers
+  ios_command:
+    commands: "sh run"
+  register: res_sh_run
+  tags:
+    - nat_del
+    - nat_view
+    - routes_del
+    - routes_view
+    - view_del
+    - all_del
+    - router-config
+
+- name: "Get current NAT configuration "
+  import_tasks: nat_del.yml
+#  when: ospf_del_all
+  tags:
+    - nat_del
+    - nat_view
+    - view_del
+    - all_del
+    - router-config
+
+- name: Erase current NAT configuration
+  ios_config:
+    lines: 
+      - "{{ int_info }}"
+  when: (int_info | length) > 0
+  tags:
+    - nat_del
+    - all_del
+    - router-config
+
+- name: "Get current all static routes configuration "
+  import_tasks: static_routes_del.yml
+#  when: ospf_del_all
+  tags:
+    - routes_del
+    - routes_view
+    - all_del
+    - router-config
+
+- name: Erase routing configuration
+  ios_config:
+    lines: 
+      - "{{ int_info }}"
+  when: (int_info | length) > 0
+  tags:
+    - routes_del
+    - all_del
+    - router-config
+
+- name: Wait for 2 sec
+  pause:
+    seconds: 2
+  tags:
+    - router-config
+
+- name: "Check directory for config files "
+  file:
+    path: "{{cfg_path}}"
+    state: directory
+  run_once: true
+  changed_when: false
+  tags:
+    - router-config
+
+- name: "Generating new global router configuration files"
+  template:
+    src: router-config.j2
+    dest: "{{cfg_path}}/router_config_{{ inventory_hostname }}.txt"
+    trim_blocks: True
+    lstrip_blocks: True    
+  tags:
+    - router-config
+
+- name: "Check cfg_path"
+  debug:
+    msg: "{{cfg_path}}"
+
+- name: "Configure  router"
+  ios_config:
+    src: "{{cfg_path}}/router_config_{{ inventory_hostname }}.txt"
+    backup: no
+  tags:
+    - router-config
+
+

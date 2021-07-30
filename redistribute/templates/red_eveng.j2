@@ -1,31 +1,29 @@
 #jinja2: trim_blocks: True, lstrip_blocks: True
 {# Configure ospf for IOS #}
-{% if inventory_hostname in redistribute %}
 {#=============================================#}
-  {% for prot in redistribute[inventory_hostname] %}
+{% for prot in redistribute %}
 {#================= Create Process OSPF ============================#}
-router {{ prot.protocol }} {{ prot.protocol_id }}
-    {% if prot.protocol  == 'ospf' %}
-      {% for red in prot.red %}
-        {% if 'metric' in red %}
- redistribute {{ red.red_protocol }} {{ red.red_id }} metric {{ red.metric }} subnets
+router {{ prot.proto_to }} {{ prot.proto_to_id }}
+{%  for red in prot.red_from %}
+    {% if prot.proto_to  == 'ospf' %}
+        {% if 'metric' in prot %}
+ redistribute {{ red.proto_from }} {{ red.proto_from_id }} metric {{ red.metric }} subnets
         {% else %}
- redistribute {{ red.red_protocol }} {{ red.red_id }} subnets
+ redistribute {{ red.proto_from }} {{ red.proto_from_id }} subnets
         {% endif %}
-      {% endfor %}
     {% endif %}
 {#================= Create Process EIGRP ============================#}
-    {% if prot.protocol  == 'eigrp' %}
- address-family ipv4 unicast autonomous-system {{ prot.protocol_af }}
+    {% if prot.proto_to == 'eigrp' %}
+ address-family ipv4 unicast autonomous-system {{ prot.proto_eigrp_as }}
   topology base
-      {% for red in prot.red %}
         {% if 'metric' in red %}
-   redistribute {{ red.red_protocol }} {{ red.red_id }} metric {{ red.metric }}
+   redistribute {{ red.proto_from }} {{ red.proto_from_id }} metric {{ red.metric }}
         {% else %}
-   redistribute {{ red.red_protocol }} {{ red.red_id }}
+   redistribute {{ red.proto_from }} {{ red.proto_from_id }}
         {% endif %}
-      {% endfor %}
     {% endif %}
+  exit
 {#=============================================#}
-  {% endfor %}
-{% endif %}  
+{%  endfor %}
+
+{% endfor %}

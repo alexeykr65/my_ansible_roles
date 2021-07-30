@@ -77,7 +77,11 @@ class FilterModule(object):
         return items
 
     @staticmethod
-    def ios_run_conf_int_ospf(text):
+    def ios_run_conf_int_ospf(text, flDel=False):
+        if flDel:
+            prefix_cmd = 'no '
+        else:
+            prefix_cmd = ''
         intrf_pattern = r"""
             \n(?P<intrf_name>interface\s+.*)\n(?P<intrf_cont>[^!]*)
         """
@@ -85,13 +89,17 @@ class FilterModule(object):
             \n(?P<intrf_ospf>\s+ip\s+ospf\s+.*)
         """
         router_ospf_pattern = r"""
-            \n(?P<router_ospf>router\sospf.*)
+            \n(?P<router_ospf>router\sospf.*)\n(?P<body_ospf>[^!]*)
         """
         reg_ospf = re.compile(router_ospf_pattern, re.VERBOSE)
         ret = ""
         items_routers = [match.groupdict() for match in reg_ospf.finditer(text)]
         for rt in items_routers:
-            ret = f'{ret}no {rt["router_ospf"]}\n'
+            if flDel:
+                postfix_cmd = ''
+            else:
+                postfix_cmd = f'\n{rt["body_ospf"]}'
+            ret = f'{ret}{prefix_cmd}{rt["router_ospf"]}{postfix_cmd}\n'
 
         reg_intrf = re.compile(intrf_pattern, re.VERBOSE)
         items_intrf = [match.groupdict() for match in reg_intrf.finditer(text)]
@@ -101,7 +109,7 @@ class FilterModule(object):
                 items_ospf = [match.groupdict() for match in reg_ospf.finditer(intrf['intrf_cont'])]
                 ospf_cont = ""
                 for ospf in items_ospf:
-                    ospf_cont = f'{ospf_cont} no{ospf["intrf_ospf"]}\n'
+                    ospf_cont = f'{ospf_cont} {prefix_cmd}{ospf["intrf_ospf"]}\n'
                 ret = f'{ret}{intrf["intrf_name"]}\n{ospf_cont}'
         return ret
 

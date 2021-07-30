@@ -1,33 +1,15 @@
 ---
 # tasks file for EIGRP
 
-- name: Collect facts
+- name: EIGRP=>> Collect facts
   ios_facts:
     gather_subset:
       - "!hardware"
-  when: inventory_hostname in eigrp
-  tags:
-    - cfg_del
 
-- name: Set fact current EIGRP 
+- name: EIGRP=>> Set fact current EIGRP 
   set_fact:
     current_eigrp: "{{ ansible_net_config | regex_findall('router eigrp (.*)') }}"
-  when: inventory_hostname in eigrp
-  tags:
-    - cfg_del
 
-- name: Show var current_eigrp
+- name: EIGRP=>> Show var current_eigrp for delete
   debug: 
     msg: "{{ current_eigrp }}"
-  when: inventory_hostname in eigrp and show_facts    
-  tags:
-    - cfg_del
-
-- name: "Delete old cfg EIGRP on router"
-  ios_config:
-    lines: "no router eigrp {{ item }}"
-    backup: no
-  when: current_eigrp is defined and current_eigrp | length > 0
-  loop: "{{ current_eigrp }}"
-  tags:
-    - cfg_del

@@ -1,41 +1,64 @@
 ---
 # tasks file for EIGRP
-- name: "Get and Delete old EIGRP configuration "
+- name: "EIGRP=>> Get and Delete old EIGRP configuration "
   import_tasks: eigrp_del.yml
-  when: do_it|bool
+#  when: do_it|bool
+  tags:
+    - eigrp_del
+    - all_del
+    - eigrp_view
+    - eigrp-config
 
-- name: "Check directory for config files "
+- name: "EIGRP=>> Delete old cfg EIGRP on router"
+  ios_config:
+    lines: "no router eigrp {{ item }}"
+    backup: no
+  when: current_eigrp is defined and current_eigrp | length > 0
+  loop: "{{ current_eigrp }}"
+  tags:
+    - eigrp_del
+    - eigrp-config
+    - all_del
+
+- name: "EIGRP=>> Check directory for config files "
   file:
     path: "{{cfg_eigrp_path}}"
     state: directory
   changed_when: false
   run_once: true
   tags:
-    - gen_cfg
+    - eigrp-config
+    - eigrp_gen
 
-- name: "Delete old local EIGRP cfg files from dir: {{ cfg_eigrp_path }} "
+- name: "EIGRP=>> Delete old local EIGRP cfg files from dir: {{ cfg_eigrp_path }} "
   file:
     path: "{{cfg_eigrp_path}}/eigrp_{{ inventory_hostname }}.txt"
     state: absent
   tags:
-    - gen_cfg
+    - eigrp-config
+    - eigrp_gen
 
-- name: "Generating new local EIGRP cfg files in dir: {{ cfg_eigrp_path }}"
+- name: "EIGRP=>> Generating new local EIGRP cfg files in dir: {{ cfg_eigrp_path }}"
   template:
     src: eigrp_eveng.j2
     dest: "{{cfg_eigrp_path}}/eigrp_{{ inventory_hostname }}.txt"
     trim_blocks: True
     lstrip_blocks: True
-  when: inventory_hostname in eigrp 
+  when: eigrp is defined and eigrp | length > 0
   tags:
-    - gen_cfg
+    - eigrp-config
+    - eigrp_gen
 
-- name: "Configure EIGRP on router from created cfg file "
+- name: "EIGRP=>> Configure EIGRP on router from created cfg file "
   ios_config:
     src: "{{cfg_eigrp_path}}/eigrp_{{ inventory_hostname }}.txt"
     backup: no
-  when: inventory_hostname in eigrp and do_it|bool
+  when: eigrp is defined and eigrp | length > 0    
+  tags:
+    - eigrp-config
 
-- name: "Show current EIGRP configuration "
+- name: "EIGRP=>> Show current EIGRP configuration "
   import_tasks: eigrp_show.yml
-  when: do_it|bool
+  tags:
+    - eigrp-config
+

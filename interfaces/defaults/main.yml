@@ -1,3 +1,4 @@
 ---
 # defaults file for interfaces
-do_it: True
+do_it: true
+int_reset: true

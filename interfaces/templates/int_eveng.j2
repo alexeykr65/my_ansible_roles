@@ -1,28 +1,28 @@
 #jinja2: trim_blocks: True, lstrip_blocks: True
 {# Configure interfaces for IOS #}
-{% for str_interfaces in interfaces[inventory_hostname] %}
+{% for str_interfaces in interfaces %}
 {#======================================================#}
   {% if 'vlan' in str_interfaces %}
-interface {{ str_interfaces['int'] }}.{{ str_interfaces['vlan'] }}
+interface {{ str_interfaces.name }}.{{ str_interfaces.vlan }}
  encapsulation dot1Q {{ str_interfaces['vlan'] }}
   {% else %}
-interface {{ str_interfaces['int'] }}
+interface {{ str_interfaces.name }}
   {% endif %}
 {#======================================================#}
 {% if 'vrf' in str_interfaces %}
- vrf forwarding {{ str_interfaces['vrf'] }}
+ vrf forwarding {{ str_interfaces.vrf }}
 {% endif %}
 {#======================================================#}
 {% if 'ipv4' in str_interfaces %}
- ip address {{ str_interfaces['ipv4'] | ipaddr('address') }} {{ str_interfaces['ipv4'] | ipaddr('netmask') }}
+ ip address {{ str_interfaces.ipv4 | ipaddr('address') }} {{ str_interfaces.ipv4 | ipaddr('netmask') }}
 {% endif %}
 {#======================================================#}
 {% if 'desc' in str_interfaces %}
- description {{ str_interfaces['desc'] }}
+ description {{ str_interfaces.desc }}
 {% endif %}
 {#======================================================#}
 {%if 'ipv6' in str_interfaces%}
- ipv6 address {{ str_interfaces['ipv6'] }}
+ ipv6 address {{ str_interfaces.ipv6 }}
 {% endif %}
 {#======================================================#}
 {%if 'link-local' in str_interfaces%}

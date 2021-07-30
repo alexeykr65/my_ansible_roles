@@ -1,6 +1,6 @@
 ---
 # tasks file for ospf
-- name: "Delete current OSPF on router"
+- name: "OSPF=>> Delete current OSPF on router"
   ios_config:
     src: ospf_del_eveng.j2
     backup: no

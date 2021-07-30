@@ -1,0 +1,27 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+{# Configure hostname for IOS #}
+{% if hostname is defined %}
+hostname {{ hostname }}
+{% endif %}
+
+{# Configure vty for IOS #}
+{% if vty is defined %}
+line vty {{ vty.num_min }} {{ vty.num_max }}
+{%  if 'exec_timeout' in vty %}
+ exec-timeout {{ vty.exec_timeout }} 0
+{%  endif %}
+{% endif %}
+{# Configure static routing #}
+{% if routing is defined %}
+{%  for net in routing %}
+ip route {{ net.net | ipaddr('network') }} {{ net.net | ipaddr('netmask') }}  {{ net.via }}
+{% endfor %}
+{% endif %}
+{# Configure NAT #}
+{% if nat is defined %}
+interface {{ nat.inside }}
+ ip nat inside
+interface {{ nat.outside }}
+ ip nat outside
+ ip nat inside source {{ nat.ipnat }}
+{% endif %}

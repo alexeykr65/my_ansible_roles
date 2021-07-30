@@ -1,31 +1,19 @@
 ---
 # tasks file for ospf
 
-- name: Get config OSPF from routers
+- name: OSPF=>> Get configs from routers
   ios_command:
     commands: "sh run"
   register: res_sh_run
-  tags:
-    - ospf_del
 
-- name: Prepare config for delete OSPF 
+- name: OSPF=>> Prepare config OSPF for delete
   set_fact:
-    int_info: "{{ res_sh_run.stdout[0] | ios_run_conf_int_ospf }}"
-  tags:
-    - ospf_del
+    int_info: "{{ res_sh_run.stdout[0] | ios_run_conf_int_ospf(True) }}"
 
-- name: Show config for delete
+- name: OSPF=>> Show config for delete
   debug:
     msg: 
       - "{{ int_info }}"
-  tags:
-    - ospf_del
 
 
-- name: Erase ospf configuration
-  ios_config:
-    lines: 
-      - "{{ int_info }}"
-  tags:
-    - ospf_del
 

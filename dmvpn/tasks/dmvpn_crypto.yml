@@ -15,7 +15,7 @@
     current_crypto_keyring: "{{ ansible_net_config | regex_findall('\\ncrypto ikev2 keyring(.*)') }}"
     current_crypto_ike_policy: "{{ ansible_net_config | regex_findall('\\ncrypto ikev2 policy(.*)') }}"
     current_crypto_ike_proposal: "{{ ansible_net_config | regex_findall('\\ncrypto ikev2 proposal(.*)') }}"
-  when: inventory_hostname in dmvpn_hosts  and do_it|bool
+#  when: inventory_hostname in dmvpn_hosts  and do_it|bool
   tags:
     - cfg_del_crypto
     - cfg_del
@@ -38,7 +38,7 @@
   ios_config:
     src: dmvpn_del_crypto.j2
     backup: no
-  when: inventory_hostname in dmvpn_hosts and do_it|bool
+#  when: inventory_hostname in dmvpn_hosts and do_it|bool
   tags:
     - cfg_del_crypto
     - cfg_del

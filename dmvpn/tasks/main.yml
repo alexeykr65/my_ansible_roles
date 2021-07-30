@@ -6,9 +6,9 @@
 #   run_once: true
 #   tags:
 #     - dmvpn_show
-- name: "Test DMVPN  "
-  import_tasks: dmvpn_test.yml
-  when: do_test|bool
+# - name: "Test DMVPN  "
+#   import_tasks: dmvpn_test.yml
+#   when: do_test|bool
 
 - name: "Set list of dmvpn hosts and tunnels"
   set_fact:

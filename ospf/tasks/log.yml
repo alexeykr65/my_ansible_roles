@@ -1,0 +1,16 @@
+---
+- name: "DEBUG >> Write CLI output (stdout) to console"
+  debug:
+    msg: "{{ CLI_OUTPUT.stdout_lines | to_nice_json }}"
+    verbosity: 1
+
+- name: "LOG >> Write CLI output (stdout) to log path"
+  template:
+    src: "log.j2"
+    dest: "{{ LOG_PATH }}{{ inventory_hostname }}.txt"
+    mode: 0444
+    force: false
+    newline_sequence: '\r\n'
+  when: "ospf_log"
+  changed_when: false
+...

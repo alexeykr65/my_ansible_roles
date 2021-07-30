@@ -1,0 +1,11 @@
+{% for cmd in ios_commands %}
+!!!
+!!! Start command: {{ cmd }}
+!!!
+{% for line in CLI_OUTPUT.stdout_lines[loop.index0] %}
+{{ line }}
+{% endfor %}
+!!!
+!!! End command:   {{ cmd }}
+!!!
+{% endfor %}

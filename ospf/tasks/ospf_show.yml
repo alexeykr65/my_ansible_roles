@@ -1,18 +1,22 @@
 ---
 # tasks file for ospf
-- name: Write OSPF cfg in variable
+- name: OSPF=>> Get config from routers
   ios_command:
     commands:
-      - sh run | s ^router ospf
-  register: ospf_cfg
-  when: inventory_hostname in ospfs  
+      - sh run
+  register: res_sh_run
   tags:
     - cfg_show
 
-- name: Show OSPF cfg
+- name: OSPF=>> Prepare config OSPF for show
+  set_fact:
+    int_info: "{{ res_sh_run.stdout[0] | ios_run_conf_int_ospf(False) }}"
+  tags:
+    - cfg_show
+
+- name: OSPF=>> Show OSPF cfg
   debug: 
-    msg: "{{ ospf_cfg.stdout_lines[0] }}"
-  when: inventory_hostname in ospfs and ospf_cfg.stdout_lines[0] | length > 1 
+    msg: "{{ int_info }}"
   tags:
     - cfg_show
 #  and length: {{ospf_cfg.stdout_lines | length }}

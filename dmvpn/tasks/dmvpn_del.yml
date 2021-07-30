@@ -4,7 +4,7 @@
   ios_facts:
     gather_subset:
       - "!hardware"
-  when: inventory_hostname in dmvpn_hosts
+#  when: inventory_hostname in dmvpn_hosts
   tags:
     - cfg_del_crypto
     - cfg_del
@@ -12,7 +12,7 @@
 - name: Set fact current DMVPN 
   set_fact:
     current_dmvpn_tuns: "{{ ansible_net_config | regex_findall('\\ninterface Tunnel(.*)') }}"
-  when: inventory_hostname in dmvpn_hosts    
+#  when: inventory_hostname in dmvpn_hosts    
   tags:
     - get_facts
     - cfg_del

@@ -16,12 +16,13 @@
     dest: "{{ cfg_red_path }}/red_{{ inventory_hostname }}.txt"
     trim_blocks: True
     lstrip_blocks: True    
-  when: inventory_hostname in redistribute
+  when: redistribute is defined
 
 - name: "Configure Redistribute on router"
   ios_config:
-    src: red_eveng.j2
+    src: "{{ cfg_red_path }}/red_{{ inventory_hostname }}.txt"
     backup: no
-
+  when: redistribute is defined
+  
 # - name: "Show current Redistribute configuration "
 #   import_tasks: red_show.yml
