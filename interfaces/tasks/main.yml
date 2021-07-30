@@ -8,7 +8,8 @@
 
 - name: "Reset Interfaces"
   import_tasks: int_reset.yml
-  when: int_reset|bool and do_it|bool and interfaces is defined
+  when: int_reset|bool and do_it|bool 
+  # and interfaces is defined
   # tags:
   #   - int_reset
 
@@ -17,7 +18,8 @@
     src: int_eveng.j2
     backup: no
   register: result_int
-  when: do_it == True and interfaces is defined
+  when: do_it == True 
+  # and interfaces is defined
 
 # - name: "Configure hostname"
 #   ios_config: 

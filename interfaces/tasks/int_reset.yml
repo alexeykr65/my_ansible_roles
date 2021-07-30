@@ -3,7 +3,7 @@
 - name: "Reset Interfaces"
   ios_config:
     lines: "default interface {{ item.name }}"
-  when: item.name is not search("loopback") and interfaces is defined
+  when: item.name is not search("loopback") 
   loop: "{{ interfaces }}"
-  
+  # and interfaces is defined
   
