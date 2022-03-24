@@ -2,3 +2,5 @@
 # defaults file for interfaces
 do_it: true
 int_reset: true
+#net_os: iosxe
+

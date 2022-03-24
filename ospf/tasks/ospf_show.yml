@@ -1,6 +1,6 @@
 ---
 # tasks file for ospf
-- name: OSPF=>> Get config from routers
+- name: OSPF=>> Get configuration from routers
   ios_command:
     commands:
       - sh run
@@ -10,13 +10,13 @@
 
 - name: OSPF=>> Prepare config OSPF for show
   set_fact:
-    int_info: "{{ res_sh_run.stdout[0] | ios_run_conf_int_ospf(False) }}"
+    get_ospf_info: "{{ res_sh_run.stdout[0] | ios_run_conf_int_ospf(False) }}"
   tags:
     - cfg_show
 
-- name: OSPF=>> Show OSPF cfg
+- name: OSPF=>> Show current OSPF configuration
   debug: 
-    msg: "{{ int_info }}"
+    msg: "{{ get_ospf_info }}"
   tags:
     - cfg_show
 #  and length: {{ospf_cfg.stdout_lines | length }}

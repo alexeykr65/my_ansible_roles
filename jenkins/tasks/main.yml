@@ -1,83 +1,9 @@
 ---
 # tasks file for jenkins
 
-- name: JENKINS=>> upgrade all packages
-  dnf:
-    name: '*'
-    state: latest    
-- name: JENKINS=>> Add some packages
-  dnf:
-    name: [ chrony, wget, java-1.8.0-openjdk-devel]
-    state: present
-
-- name: Gather the rpm package facts
-  package_facts:
-    manager: auto
-- name: Check whether a package called java-1.8.0-openjdk-devel is installed
-  debug:
-    msg: "{{ ansible_facts.packages['java-1.8.0-openjdk-devel'][0].version }} versions of openjdk are installed!"
-  when: "'java-1.8.0-openjdk-devel' in ansible_facts.packages"
-    
-- name: JENKINS=>> populate service facts
-  service_facts:
-# - debug:
-#     msg: "{{ ansible_facts.services }}"
-- name: JENKINS=>> Download jenkins.repo from http://pkg.jenkins.io/redhat-stable/jenkins.repo
-  get_url:
-    url: https://pkg.jenkins.io/redhat-stable/jenkins.repo
-    dest: /etc/yum.repos.d/jenkins.repo
-    mode: '0644'
-- name: JENKINS=>> Make sure a some service is stoped
-  systemd:
-    state: stopped
-    name: "{{ item }}"
-    enabled: no
-  when: item in ansible_facts.services
-  with_items:
-    - "firewalld.service"
-- name: JENKINS=>> Import jenkins repo key
-  rpm_key:
-    state: present
-    key: https://pkg.jenkins.io/redhat-stable/jenkins.io.key
-- name: "JENKINS=>> Install jenkins package "
-  dnf:
-    name: "jenkins"
-    state: present
-    update_cache: yes
- 
-- name: JENKINS=>> Make sure the some services is running
-  systemd:
-    state: started
-    enabled: yes
-    name: "{{ item }}"
-  with_items:
-    - "jenkins"
-    - "chronyd"
-- name: JENKINS=>> Populate service facts
-  service_facts:
-- name: JENKINS=>> Show status service jenkins
-  debug:
-    msg: "{{ ansible_facts.services['jenkins.service'] }}"
-# - name: Reboot
-#   reboot:
-# - name: JENKINS=>> Run netstat for check port 
-#   shell: "netstat -lntup | grep java"
-#   retries: 5
-#   delay: 15
-#   register: res_net
-# - name: JENKINS=>> Show netstat jenkins
-#   debug:
-#     msg: "{{ res_net.stdout }}"
-- name: Wait until the file initialAdminPassword is present
-  wait_for:
-    path: /var/lib/jenkins/secrets/initialAdminPassword
-    timeout: 300
-    delay: 10
-- name: JENKINS=>> Cat admin password /var/lib/jenkins/secrets/initialAdminPassword
-  shell: "cat /var/lib/jenkins/secrets/initialAdminPassword"
-  retries: 5
-  delay: 15
-  register: res_net
-- name: JENKINS=>> Show admin password jenkins
-  debug:
-    msg: "{{ res_net.stdout }} \nurl address: http://{{ ansible_ssh_host }}:8080"
+- name: "JENKINS=>> Select Distributive"
+  include_tasks: "{{ net_os }}_jenkins.yml"
+  when: 
+    - jenkins_role is defined
+    - jenkins_role|bool 
+    - net_os is defined

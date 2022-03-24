@@ -1,7 +1,7 @@
 ---
 # defaults file for bgp
 cfg_bgp_del: True
-cfg_bgp_del_all: False
+cfg_bgp_del_all: True
 cfg_bgp_show: True
 cfg_bgp_path: "./configs/bgp"
 bgp_src: "./bgp"

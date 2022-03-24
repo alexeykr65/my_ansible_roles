@@ -1,0 +1,31 @@
+---
+- name: HUAWEI ROUTER=>> Change idle-timeout and hostname
+  ansible.netcommon.cli_command:
+    command: |
+      system-view
+      sysname {{ hostname }}
+      user-interface vty 0 4
+        idle-timeout 0
+        screen-length 0
+        user privil level 15
+        return
+### Configure static routing
+- name: HUAWEI ROUTER=>> Configure static routings
+  ansible.netcommon.cli_command:
+    command: |
+      system-view
+      ip route-static {{ item.net|ipaddr('network') }} {{ item.net|ipaddr('netmask') }} {{ item.via }}
+      return
+  loop: "{{ routing }}"
+  when: routing is defined
+
+- name: HUAWEI ROUTER=>> Get routing information
+  ansible.netcommon.cli_command:
+    command: display ip routing-table
+  register: result
+
+- name: HUAWEI ROUTER=>> Show information
+  debug:
+    msg: "{{ result.stdout }}"
+
+

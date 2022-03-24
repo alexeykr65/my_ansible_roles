@@ -1,0 +1,40 @@
+---
+- name: HUAWEI=>> Configure Huawei routers
+  hosts: huawei
+  connection: network_cli
+  gather_facts: False
+  vars:
+    cfg_backup_path: "./configs/backup"
+
+  tasks:
+    - name: HUAWEI=>> Set Variables
+      set_fact:
+        cur_date: "{{ lookup('pipe','date +%Y-%m-%d_%H-%M') }}"
+      run_once: true
+
+    - name: "HUAWEI=>> Check directory for config files "
+      file:
+        path: "{{cfg_backup_path}}"
+        state: directory
+      run_once: true
+      changed_when: false
+    
+    - name: Backup configuration to dir backup
+      ansible.netcommon.cli_command:
+        command: |
+          dis current
+      register: config
+
+    # - name: Show config
+    #   debug:
+    #     msg: "{{ config }}"
+
+    - name: Save config
+      copy:
+        dest: "{{ cfg_backup_path }}/{{ inventory_hostname }}_{{ cur_date }}.txt"
+        content: "{{ config.stdout_lines|join('\n') }}"
+
+    - name: Save config to last file
+      copy:
+        dest: "{{ cfg_backup_path }}/last_{{ inventory_hostname }}.txt"
+        content: "{{ config.stdout_lines|join('\n') }}"

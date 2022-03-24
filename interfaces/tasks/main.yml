@@ -6,37 +6,9 @@
 #       - "{{ do_it }}"
 #       - "{{ int_reset }}"
 
-- name: "Reset Interfaces"
-  import_tasks: int_reset.yml
-  when: int_reset|bool and do_it|bool 
-  # and interfaces is defined
-  # tags:
-  #   - int_reset
-
-- name: "Configure interfaces"
-  ios_config:
-    src: int_eveng.j2
-    backup: no
-  register: result_int
-  when: do_it == True 
-  # and interfaces is defined
-
-# - name: "Configure hostname"
-#   ios_config: 
-#     lines: 
-#       - "hostname {{ inventory_hostname }}"
-#   when: do_it == True
-
-# - name: "UP interfaces"
-#   ios_interface:
-#     name: "{{ item['int'] }}"
-#     enabled: True
-#   loop: "{{ interfaces[inventory_hostname] }}"
-#   register: result_up
-#   when: do_it == True
-
-# - name: "Save Configuration "
-#   ios_command: 
-#     commands: wr mem
-#   when: result_int.changed or result_up.changed and do_it == True
-
+- name: "Configure Interfaces"
+  include_tasks: "{{ net_os }}_interfaces.yml"
+  when: 
+    - int_reset|bool 
+    - do_it|bool 
+    - interfaces is defined

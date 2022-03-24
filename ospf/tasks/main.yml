@@ -2,20 +2,35 @@
 # tasks file for ospf
 
 - name: "OSPF=>> Get current OSPF configuration "
-  import_tasks: ospf_del_all.yml
+  import_tasks: ospf_get_info.yml
   when: ospf_del_all
   tags:
     - ospf_del
-    - ospf_view
-    - view_del
     - all_del
     - ospf_cfg
+
+- name: OSPF=>> Show config for delete
+  debug:
+    msg: 
+      - "{{ ospf_to_del }}"
+  tags:
+    - ospf_del
+    - ospf_cfg
+    - all_del
+
+# - name: OSPF=>> Show current config OSPF
+#   debug:
+#     msg: 
+#       - "{{ ospf_to_view }}"
+#   tags:
+#     - ospf_view
+#     - ospf_cfg
 
 - name: OSPF=>> Erase ospf configuration
   ios_config:
     lines: 
-      - "{{ int_info }}"
-  when: (int_info | length) > 0
+      - "{{ ospf_to_del }}"
+  when: (ospf_to_del | length) > 0
   tags:
     - ospf_del
     - all_del
@@ -64,6 +79,7 @@
   import_tasks: ospf_show.yml
   tags:
     - ospf_cfg
+    - ospf_view
 
 - name: "OSPF=>> Check OSPF configuration"
   import_tasks: ospf_check_playbook.yml

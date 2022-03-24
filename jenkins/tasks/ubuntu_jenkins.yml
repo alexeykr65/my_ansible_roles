@@ -1,0 +1,77 @@
+---
+# tasks file for jenkins
+
+- name: JENKINS=>> Update cache all packages
+  apt: 
+    update_cache: yes 
+    force_apt_get: yes 
+    cache_valid_time: 3600  
+
+- name: JENKINS=>> Upgrade all apt packages
+  apt: 
+    upgrade: dist 
+    force_apt_get: yes    
+
+- name: JENKINS=>> Add some packages
+  apt:
+    name: [ chrony, wget, openjdk-11-jdk]
+    state: present
+
+- name: JENKINS=>> Add Key jenkins
+  shell: "wget -q -O - https://pkg.jenkins.io/debian/jenkins.io.key | sudo apt-key add -"
+
+- name: JENKINS=>> Install Jenkins Repo
+  apt_repository:
+    repo: deb https://pkg.jenkins.io/debian-stable binary/
+    state: present
+    filename: 'jenkins'
+
+- name: JENKINS=>> Update cache all packages
+  apt: 
+    update_cache: yes 
+    force_apt_get: yes 
+    cache_valid_time: 3600  
+
+- name: JENKINS=>> Add jenkins packages
+  apt:
+    name: jenkins
+    state: present
+
+- name: JENKINS=>> Make sure the some services is running
+  systemd:
+    state: started
+    enabled: yes
+    name: "{{ item }}"
+  with_items:
+    - "jenkins"
+    - "chronyd"
+
+- name: JENKINS=>> Populate service facts
+  service_facts:
+- name: JENKINS=>> Show status service jenkins
+  debug:
+    msg: "{{ ansible_facts.services['jenkins'] }}"
+
+# # - name: Reboot
+# #   reboot:
+# # - name: JENKINS=>> Run netstat for check port 
+# #   shell: "netstat -lntup | grep java"
+# #   retries: 5
+# #   delay: 15
+# #   register: res_net
+# # - name: JENKINS=>> Show netstat jenkins
+# #   debug:
+# #     msg: "{{ res_net.stdout }}"
+- name: Wait until the file initialAdminPassword is present
+  wait_for:
+    path: /var/lib/jenkins/secrets/initialAdminPassword
+    timeout: 300
+    delay: 10
+- name: JENKINS=>> Cat admin password /var/lib/jenkins/secrets/initialAdminPassword
+  shell: "cat /var/lib/jenkins/secrets/initialAdminPassword"
+  retries: 5
+  delay: 15
+  register: res_net
+- name: JENKINS=>> Show admin password jenkins
+  debug:
+    msg: "{{ res_net.stdout }} \nurl address: http://{{ ansible_ssh_host }}:8080"

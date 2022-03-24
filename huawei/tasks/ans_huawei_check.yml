@@ -1,0 +1,24 @@
+- name: HUAWEI=>> Configure Huawei routers
+  hosts: huawei
+  connection: network_cli
+  gather_facts: False
+
+  tasks:
+    - name: HUAWEI =>> Check ping for links
+      ansible.netcommon.cli_command:
+        command: |
+          ping -c 3 {{ item }} 
+      loop: "{{ check_ping }}"
+      when: check_ping is defined
+      register: ping_out
+
+    - name: HUAWEI =>> Show Ping Result
+      debug:
+        msg: "{{ item.stdout }}"
+#      when: "{{ item.stdout|regex_search('test') }}"
+      loop: "{{ ping_out.results }}"
+      loop_control:
+        label: "{{ item.item}}"
+      when: check_ping is defined and item.stdout|regex_search('100.00% packet loss')
+
+#100.00% packet loss

@@ -1,0 +1,30 @@
+---
+- name: HUAWEI=>> Configure Huawei routers
+  hosts: huawei
+  connection: network_cli
+  gather_facts: False
+  vars:
+    cfg_ospf_path: "./configs/ospf"
+
+  # roles:
+  #   - { role: interfaces }
+
+  tasks:
+    # - name: HUAWEI=>> Show variables
+    #   debug:
+    #     msg: "ip route-static {{ item.net|ipaddr('network') }} {{ item.net|ipaddr('netmask') }} {{ item.via }}"
+    #   loop: "{{ routing }}"
+    #   when: routing  is defined
+
+# ### Configure interfaces
+#     - name: HUAWEI=>> Configure Interfaces
+#       import_tasks: ans_huawei_interfaces.yml
+
+### Configure static routing
+    - name: HUAWEI=>> Configure static routing
+      import_tasks: ans_huawei_router.yml
+
+# ### Configure OSPF routing
+#     - name: "Check directory for config files "
+#       import_tasks: ans_huawei_ospf.yml
+

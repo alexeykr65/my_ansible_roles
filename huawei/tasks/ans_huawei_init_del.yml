@@ -1,0 +1,22 @@
+- name: HUAWEI=>> Configure Huawei Del Init Configuration  
+  hosts: huawei
+  connection: network_cli
+  gather_facts: False
+
+  tasks:
+
+    - name: HUAWEI =>> Run init command
+      ansible.netcommon.cli_command:
+        command: "{{ init_del }}"
+      when: init_del is defined
+      register: init_conf_out
+      tags:
+        - init_del
+
+    - name: HUAWEI =>> Show command result
+      debug:
+        msg: "{{ init_conf_out.stdout }}"
+      when: init_del is defined
+      tags:
+        - init_del
+

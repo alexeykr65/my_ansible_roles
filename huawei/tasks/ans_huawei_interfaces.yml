@@ -1,0 +1,22 @@
+---
+### Configure interfaces
+- name: HUAWEI INTERFACE=>> Configure Interfaces
+  ansible.netcommon.cli_command:
+    command: |
+      system-view
+      interface {{ item.name }}
+       ip address {{ item.ipv4|ipaddr('address') }} {{ item.ipv4|ipaddr('netmask') }}
+       undo shutdown
+       return
+  loop: "{{ interfaces }}"
+  when: interfaces is defined
+
+- name: HUAWEI INTERFACE=>> Get information about Interfaces
+  ansible.netcommon.cli_command:
+    command: dis ip interface br
+  register: result
+
+- name: HUAWEI INTERFACE=>> Show information
+  debug:
+    msg: "{{ result.stdout }}"
+

@@ -1,0 +1,26 @@
+- name: HUAWEI=>> Configure Huawei Init Configure  
+  hosts: huawei
+  connection: network_cli
+  gather_facts: False
+
+  tasks:
+
+    - name: HUAWEI =>> Run init command
+      ansible.netcommon.cli_command:
+        command: "{{ init_conf }}"
+#      loop: "{{ init_conf.split('\n') }}"
+      when: init_conf is defined
+      register: init_conf_out
+      tags:
+        - init_conf
+
+    - name: HUAWEI =>> Show command result
+      debug:
+        msg: "{{ init_conf_out.stdout }}"
+#      loop: "{{ init_conf_out.results }}"
+#      loop_control:
+#        label: "{{ item.item}}"
+      when: init_conf is defined
+      tags:
+        - init_conf
+

@@ -1,6 +1,5 @@
 #jinja2: trim_blocks: True, lstrip_blocks: True
 {# Configure vrf for IOS #}
-{% if inventory_hostname in vrfs %}
   {#======================================================#}
   {% for vrf in vrfs[inventory_hostname] %}
 vrf definition {{ vrf.vrf_name }}
@@ -15,4 +14,3 @@ vrf definition {{ vrf.vrf_name }}
  route-target export {{ vrf.vrf_rt_exp }}
     {% endif %}
   {% endfor %}
-{% endif %}

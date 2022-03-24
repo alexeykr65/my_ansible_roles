@@ -1,0 +1,89 @@
+---
+### Configure OSPF routing
+- name: "HUAWEI OSPF=>> Check directory for config files "
+  file:
+    path: "{{cfg_ospf_path}}"
+    state: directory
+  run_once: true
+  changed_when: false
+  tags:
+    - ospf_cfg
+    - ospf_cfg_gen
+
+- name: HUAWEI OSPF=>> Delete old OSPF processes
+  ansible.netcommon.cli_command:
+    command: |
+      system-view
+      undo ospf {{ item.id }}
+    prompt: 
+      - Continue
+      - specified process does not exist
+    answer: |
+      y
+      return
+  loop: "{{ ospf }}"
+  when: ospf is defined
+
+- name: "HUAWEI OSPF=>> Generating new OSPF configuration files"
+  template:
+    src: ospf_huawei.j2
+    dest: "{{cfg_ospf_path}}/ospf_{{ inventory_hostname }}.txt"
+    trim_blocks: True
+    lstrip_blocks: True    
+  when: ospf is defined
+
+- name: HUAWEI OSPF=>> Load new OSPF configuration from files
+  set_fact:
+    user_data: "{{ lookup('file', './configs/ospf/ospf_{{ inventory_hostname }}.txt') }}"
+  when: ospf is defined
+# - name: HUAWEI=>> Show information
+#   debug:
+#     msg: "{{ user_data }}"
+
+- name: HUAWEI OSPF=>> Configure OSPF on routers
+  ansible.netcommon.cli_command:
+    command: "{{ user_data }}"
+  when: ospf is defined
+
+
+
+
+          # |
+          # system-view
+          # ospf router-id 5.5.5.5 10
+      
+          #   area 0
+          #    network 10.131.11.0 0.0.0.255
+          #   area 0
+          #    network 10.131.12.0 0.0.0.255
+          #   area 0
+          #    network 10.131.13.0 0.0.0.255
+
+
+      #        "{{ user_data }}"
+      #loop: "{{ user_data }}"
+      # when: routing is defined
+
+    # - name: configure device with config with defaults enabled
+    #   ansible.netcommon.cli_config:
+    #     config: "{{ lookup('template', 'ospf_huawei.j2') }}"
+
+    # - name: HUAWEI=>> Configure OSPF
+    #   ansible.netcommon.cli_command:
+    #     command: |
+    #       system-view
+    #       ospf router-id {{ item.rid }} {{ item.id }}
+    #        {{ item.net|ipaddr('network') }} {{ item.net|ipaddr('netmask') }} {{ item.via }}
+    #       return
+    #   loop: "{{ routing }}"
+    #   when: routing is defined
+
+    # - name: HUAWEI=>> Get routing information
+    #   ansible.netcommon.cli_command:
+    #     command: display ip routing-table
+    #   register: result
+
+    # - name: HUAWEI=>> Show information
+    #   debug:
+    #     msg: "{{ result.stdout }}"
+

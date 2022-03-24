@@ -1,6 +1,6 @@
 ---
 # tasks file for interfaces
-- name: "Reset Interfaces"
+- name: "IOSXE INTERFACE=>> Reset Interfaces"
   ios_config:
     lines: "default interface {{ item.name }}"
   when: item.name is not search("loopback") 
