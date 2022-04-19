@@ -1,0 +1,10 @@
+---
+- name: KUBESPRAY/ANSIBLE_HOST==>> Git checkout kubespray
+  ansible.builtin.git:
+    repo: 'https://github.com/kubernetes-sigs/kubespray.git'
+    dest: /root/kubespray
+- name: KUBESPRAY/ANSIBLE_HOST==>> Install specified python requirements
+  pip:
+    requirements: /root/kubespray/requirements.txt
+
+

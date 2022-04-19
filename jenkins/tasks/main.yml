@@ -1,5 +1,10 @@
 ---
 # tasks file for jenkins
+# - name: "Show variables"
+#   debug: 
+#     msg: 
+#     - "{{ jenkins_role }}"
+#     - "{{ net_os }}"
 
 - name: "JENKINS=>> Select Distributive"
   include_tasks: "{{ net_os }}_jenkins.yml"

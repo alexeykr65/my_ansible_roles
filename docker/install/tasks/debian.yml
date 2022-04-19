@@ -1,0 +1,61 @@
+---
+- name: DOCKER/INSTALL=>> Update cache
+  ansible.builtin.apt:
+    update_cache: yes 
+    force_apt_get: yes 
+    cache_valid_time: 3600 
+
+- name: DOCKER/INSTALL=>> Upgrade all packages
+  ansible.builtin.apt: 
+    upgrade: dist 
+    force_apt_get: yes   
+
+- name: DOCKER/INSTALL=>> Add some packages
+  ansible.builtin.apt:
+    name: [ apt-transport-https, gnupg2, ca-certificates, curl, software-properties-common, git, locales-all ]
+    state: present
+
+- name: DOCKER/INSTALL=>> Add Key docker 
+  shell: "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -"
+
+- name: DOCKER/INSTALL=>> Install Docker Repo
+  apt_repository:
+    repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable
+    state: present
+    filename: 'docker'
+
+- name: DOCKER/INSTALL=>> Update cache all
+  apt: 
+    update_cache: yes 
+    force_apt_get: yes 
+    cache_valid_time: 3600  
+
+- name: DOCKER/INSTALL=>> Add Docker package
+  ansible.builtin.apt:
+    name: [ docker-ce ]
+    state: present
+
+- name: DOCKER/INSTALL=>> Make sure the docker service is running
+  systemd:
+    state: started
+    enabled: yes
+    name: "{{ item }}"
+  with_items:
+    - "docker"
+
+- name: DOCKER/INSTALL=>> Populate service facts
+  service_facts:
+- name: DOCKER/INSTALL=>> Show status service Docker
+  debug:
+    msg: "{{ ansible_facts.services['docker'] }}"
+
+
+# - name: DOCKER/INSTALL==>> Git checkout kubespray
+#   ansible.builtin.git:
+#     repo: 'https://github.com/kubernetes-sigs/kubespray.git'
+#     dest: /root/kubespray
+# - name: DOCKER/ANSIBLE_HOST==>> Install specified python requirements
+#   pip:
+#     requirements: /root/kubespray/requirements.txt
+
+

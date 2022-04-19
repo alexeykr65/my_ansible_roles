@@ -1,0 +1,15 @@
+---
+- name: KUBESPRAY/COMMON=>> update cache packages
+  ansible.builtin.apt:
+    update_cache: yes 
+    force_apt_get: yes 
+    cache_valid_time: 3600 
+- name: KUBESPRAY/COMMON=>> Upgrade all apt packages
+  ansible.builtin.apt: 
+    upgrade: dist 
+    force_apt_get: yes   
+- name: KUBESPRAY/COMMON=>> Add some packages
+  ansible.builtin.apt:
+    name: [ python3, python3-pip, git, locales-all ]
+    state: present
+

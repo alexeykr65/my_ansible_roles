@@ -1,0 +1,82 @@
+---
+- name: DOCKER/MINIKUBE=>> Update cache
+  ansible.builtin.apt:
+    update_cache: yes 
+    force_apt_get: yes 
+    cache_valid_time: 3600 
+
+- name: DOCKER/MINIKUBE=>> Upgrade all packages
+  ansible.builtin.apt: 
+    upgrade: dist 
+    force_apt_get: yes   
+
+- name: DOCKER/MINIKUBE=>> Add some packages
+  ansible.builtin.apt:
+    name: [ apt-transport-https, gnupg2, ca-certificates, curl, software-properties-common, git, locales-all, conntrack, qemu-system, libvirt-daemon-system ]
+    state: present
+
+- name: DOCKER/MINIKUBE=>> Add Key  
+  shell: "curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -"
+
+- name: DOCKER/MINIKUBE=>> Install Repo
+  apt_repository:
+    repo: deb https://apt.kubernetes.io/ kubernetes-xenial main
+    state: present
+    filename: 'kube'
+
+- name: DOCKER/MINIKUBE=>> Update cache all
+  apt: 
+    update_cache: yes 
+    force_apt_get: yes 
+    cache_valid_time: 3600  
+
+- name: DOCKER/MINIKUBE=>> Add kubectl package
+  ansible.builtin.apt:
+    name: [ kubectl ]
+    state: present
+
+- name: DOCKER/MINIKUBE=>> Add user debian to libvirt group
+  ansible.builtin.user:
+    name: debian
+    groups: libvirt
+    append: yes
+
+- name: DOCKER/MINIKUBE=>> Download minikube file to /usr/local/bin
+  get_url:
+    url: https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+    dest: /usr/local/bin/minikube
+    mode: 0755
+
+- name: DOCKER/MINIKUBE=>> Run minikube in Docker
+  shell: "minikube start --vm-driver=none"
+
+- name: Specifying a path directly
+  ansible.builtin.fetch:
+    src: "{{ item.name_src }}"
+    dest: "{{ inventory_hostname|lower() }}_minikube/{{ item.name_dst }}"
+    flat: yes
+  loop:
+    - { name_src: '/root/.minikube/ca.crt', name_dst: 'ca.crt' }
+    - { name_src: '/root/.minikube/profiles/minikube/client.crt', name_dst: 'client.crt' }
+    - { name_src: '/root/.minikube/profiles/minikube/client.key', name_dst: 'client.key' }
+    - { name_src: '/root/.kube/config', name_dst: 'config' }
+
+- name: Ensure SELinux is set to enforcing mode
+  ansible.builtin.lineinfile:
+    path: "{{ inventory_hostname|lower() }}_minikube/config"
+    regexp: "{{ item.name_src }}"
+    line: "{{ item.name_dst }}"
+  delegate_to: localhost
+  loop:
+    - { name_src: 'client-certificate', name_dst: '    client-certificate: client.crt' }
+    - { name_src: 'certificate-authority', name_dst: '    certificate-authority: ca.crt' }
+    - { name_src: 'client-key', name_dst: '    client-key: client.key' }
+
+
+    # client-certificate: /root/.minikube/profiles/minikube/client.crt
+    # client-key: /root/.minikube/profiles/minikube/client.key
+
+  # become: true
+  # become_user: debian
+  # minikube start --driver=podman --container-runtime=cri-o
+  # minikube start --vm-driver kvm2 --memory 8112 --cpus 8 --apiserver-ips=192.168.1.121

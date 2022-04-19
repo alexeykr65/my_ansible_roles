@@ -1,0 +1,32 @@
+---
+- name: LINUX/COMMON=>> Update cache
+  ansible.builtin.apt:
+    update_cache: yes 
+    force_apt_get: yes 
+    cache_valid_time: 3600 
+
+- name: LINUX/COMMON=>> Upgrade all packages
+  ansible.builtin.apt: 
+    upgrade: dist 
+    force_apt_get: yes   
+
+- name: LINUX/COMMON=>> Add some packages
+  ansible.builtin.apt:
+    name: [ apt-transport-https, gnupg2, ca-certificates, curl, software-properties-common, git, locales-all ]
+    state: present
+
+# - name: Add the user 'james' with a bash shell, appending the group 'admins' and 'developers' to the user's groups
+#   ansible.builtin.user:
+#     name: root
+#     shell: /usr/bin/zsh
+
+# - name: DOCKER/MINIKUBE=>> Download minikube file to /usr/local/bin
+#   get_url:
+#     url: https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh
+#     dest: /root/install.sh
+#     mode: 0755
+
+# - name: DOCKER/MINIKUBE=>> Add Key  
+#   shell: "echo 'y' | /root/install.sh"
+
+# # "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"

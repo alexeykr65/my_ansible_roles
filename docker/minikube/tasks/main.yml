@@ -1,0 +1,13 @@
+---
+- name: "DOCKER/MINIKUBE=>> Install Docker"
+  import_role:
+    name: "docker/install"
+
+- name: "DOCKER/MINIKUBE=>> Gather host facts"
+  setup:
+    gather_subset: '!all'
+    filter: ansible_distribution
+
+- name: "DOCKER/MINIKUBE=>> Select Distributive"
+  include_tasks: "{{ ansible_distribution|lower()}}.yml"
+

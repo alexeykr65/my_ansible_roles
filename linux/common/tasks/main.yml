@@ -1,0 +1,13 @@
+---
+# - name: "LINUX/COMMON=>> Gather host facts"
+#   debug:
+#     msg: "var from file: {{ var_from_file }}"
+
+- name: "LINUX/COMMON=>> Gather host facts"
+  setup:
+    gather_subset: '!all'
+    filter: ansible_distribution
+
+- name: "LINUX/COMMON=>> Select Distributive"
+  include_tasks: "{{ ansible_distribution|lower()}}.yml"
+

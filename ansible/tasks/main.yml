@@ -1,49 +1,9 @@
 ---
 # tasks file for ansible
-- name: ANSIBLE=>> upgrade all packages
-  dnf:
-    name: '*'
-    state: latest    
-- name: ANSIBLE=>> Add some packages
-  dnf:
-    name: [ chrony, epel-release ]
-    state: present
-- name: JENKINS=>> Populate service facts
-  service_facts:
-- name: ANSIBLE=>> Make sure a some service is stoped
-  systemd:
-    state: stopped
-    name: "{{ item }}"
-    enabled: no
-  when: item in ansible_facts.services
-  with_items:
-    - "firewalld.service"
-- name: ANSIBLE=>> Add ansible package
-  dnf:
-    name: ansible
-    state: present
-    update_cache: yes
 
-- name: ANSIBLE=>> Make sure the some services is running
-  systemd:
-    state: started
-    enabled: yes
-    name: "{{ item }}"
-  with_items:
-    - "chronyd"
-- name: Wait until the file /usr/bin/ansible is present
-  wait_for:
-    path: /usr/bin/ansible
-    timeout: 300
-    delay: 10
-- name: ANSIBLE=>> Get ansible version
-  shell: |
-    ansible --version
-  args:
-    executable: /bin/bash
-  register: res_net
-- name: ANSIBLE=>> Show admin password jenkins
-  debug:
-    msg: "{{ res_net.stdout }} \nip address: {{ ansible_ssh_host }}"
-
-
+- name: "ANSIBLE=>> Select Distributive"
+  include_tasks: "{{ net_os }}_ansible.yml"
+  when: 
+    - ansible_role is defined
+    - ansible_role|bool 
+    - net_os is defined

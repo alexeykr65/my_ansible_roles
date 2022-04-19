@@ -1,0 +1,48 @@
+---
+# tasks file for ansible
+- name: ANSIBLE=>> upgrade all packages
+  ansible.builtin.apt:
+    update_cache: yes 
+    force_apt_get: yes 
+    cache_valid_time: 3600  
+
+- name: ANSIBLE=>> Upgrade all apt packages
+  ansible.builtin.apt: 
+    upgrade: dist 
+    force_apt_get: yes    
+
+- name: ANSIBLE=>> Add some packages
+  ansible.builtin.apt:
+    name: [ software-properties-common]
+    state: present
+
+- name: ANSIBLE=>> Add ansible repositories
+  ansible.builtin.apt_repository:
+    repo: ppa:ansible/ansible
+    update_cache: yes
+
+- name: ANSIBLE=>> Add ansible package
+  ansible.builtin.apt:
+    name: ansible
+    state: present
+
+- name: ANSIBLE=>> Wait until the file /usr/bin/ansible is present
+  wait_for:
+    path: /usr/bin/ansible
+    timeout: 300
+    delay: 10
+
+- name: ANSIBLE=>> Get ansible version
+  shell: |
+    ansible --version
+  args:
+    executable: /bin/bash
+  register: res_net
+
+- name: ANSIBLE=>> Show admin password jenkins
+  debug:
+    msg: 
+      - "{{ res_net.stdout_lines }}"
+      - "Host ip address: {{ ansible_ssh_host }}"
+
+

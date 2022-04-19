@@ -1,0 +1,21 @@
+---
+- name: "KUBESPRAY/COMMON=>> Generate ssh keypair for ansible host"
+  community.crypto.openssh_keypair:
+    path: ./id_test_ssh_rsa
+    force: false
+  connection: local
+  delegate_to: localhost
+
+- name: "KUBESPRAY/COMMON=>> Gather host facts"
+  setup:
+    gather_subset: '!all'
+    filter: ansible_distribution
+
+- name: "KUBESPRAY/COMMON=>> Select Distributive"
+  include_tasks: "{{ ansible_distribution|lower()}}.yml"
+
+- name: KUBESPRAY/COMMON==>> Set authorized key taken from file
+  ansible.posix.authorized_key:
+    user: root
+    state: present
+    key: "{{ lookup('file', 'id_test_ssh_rsa.pub') }}"

@@ -1,0 +1,9 @@
+---
+- name: "DOCKER/INSTALL=>> Gather host facts"
+  setup:
+    gather_subset: '!all'
+    filter: ansible_distribution
+
+- name: "DOCKER/INSTALL=>> Select Distributive"
+  include_tasks: "{{ ansible_distribution|lower()}}.yml"
+

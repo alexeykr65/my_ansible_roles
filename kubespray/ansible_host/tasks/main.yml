@@ -1,0 +1,25 @@
+---
+- name: "KUBESPRAY/COMMON=>> Gather host facts"
+  setup:
+    gather_subset: '!all'
+    filter: ansible_distribution
+
+- name: "KUBESPRAY/COMMON=>> Select Distributive"
+  include_tasks: "{{ ansible_distribution|lower()}}.yml"
+
+- name: KUBESPRAY/ANSIBLE_HOST==>> Copy private ssh key to ansible host
+  ansible.builtin.copy:
+    src: id_test_ssh_rsa
+    dest: /root/.ssh/id_rsa
+    mode: 0600
+
+- name: KUBESPRAY/ANSIBLE_HOST==>> Copy public ssh key to ansible host
+  ansible.builtin.copy:
+    src: id_test_ssh_rsa.pub
+    dest: /root/.ssh/id_rsa.pub
+    mode: 0644
+
+- name: KUBESPRAY/ANSIBLE_HOST==>> Copy configs for kubespray
+  ansible.builtin.copy:
+    src: ./lab/
+    dest: /root/kubespray/inventory/lab
